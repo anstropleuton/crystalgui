@@ -43,11 +43,13 @@ int main(void)
 
     Texture background = LoadTexture("../res/background.png");
     bool useWallpaper = false, theme = false;
-    int timesClicked = 0;
+    int timesClicked = 0, ddResult = 0;
 
     // Gui variables
-    CguiButton myButton = CguiCreateButton((Rectangle){ 20, 70, 200, 40 }, "Button");
-    CguiDropDownButton ddButton = CguiCreateDropDownButton((Rectangle){ 20, 20, 200, 40 }, (char *[]){ "Select Tool", "Wrench", "Hammer", "Blade", "Screw you", "Tape", "Glue" }, 7, 0);
+    CguiButton myButton = CguiCreateButton((Rectangle){ 20, 20, 200, 40 }, "Normal Button");
+    CguiDropDownButton ddButton = CguiCreateDropDownButton((Rectangle){ 20, 70, 200, 40 }, (const char *[]){ "Select Tool", "Wrench", "Hammer", "Blade", "Screw you", "Tape", "Glue" }, 7, 0);
+    CguiRepeatButton rpButton = CguiCreateRepeatButton((Rectangle){ 20, 120, 200, 40 }, "Repeat Button");
+    CguiHyperLinkButton hpButton = CguiCreateHyperLinkButton((Rectangle){ 20, 170, 200, 40 }, "My Repo", "https://github.com/AnstroPleuton/crystalgui");
     //--------------------------------------------------------------------------------------
 
     while (!WindowShouldClose())
@@ -65,17 +67,30 @@ int main(void)
             else DrawRectanglePro((Rectangle){ 0.0f, 0.0f, (float)GetScreenWidth(), (float)GetScreenHeight() }, (Vector2){ 0.0f, 0.0f }, 0.0f, ColorAlpha(CguiGetColor(CGUI_COLOR_BACKGROUND), 1.0f));
         CguiEndBackground();
 
-        // Update Cgui
-        CguiUpdateButton(&myButton);
-        CguiUpdateDropDownButton(&ddButton);
+        // First these gui elements updates
+        ddResult = CguiUpdateDropDownButton(&ddButton);
+
+        // Update Cgui only if the drop down is not active
+        if (ddResult != -2)
+        {
+            // Update Cgui
+            if (CguiUpdateButton(&myButton)) CguiTraceLog("Normal button pressed");
+            if (ddResult >= 0) CguiTraceLog("Drop Down selected entry: %s", *(const char **)GetElement(ddButton.selectedEntry, ddButton.entries)->data);
+            if (CguiUpdateRepeatButton(&rpButton)) CguiTraceLog("Repeat button pressed");
+            if (CguiUpdateHyperLinkButton(&hpButton)) CguiTraceLog("Hyper link button pressed");
+        }
 
         // Main Drawing
         BeginDrawing();
             // Draw the background that was used by CguiBeginBackground
             CguiDrawBackground();
 
-            // Draw Cgui
+            // Draw Cgui (Draw in reverse order)
+            CguiDrawHyperLinkButton(&hpButton);
+            CguiDrawRepeatButton(&rpButton);
             CguiDrawButton(&myButton);
+
+            // Last these gui elements draws
             CguiDrawDropDownButton(&ddButton);
         EndDrawing();
     }
@@ -84,6 +99,8 @@ int main(void)
     //--------------------------------------------------------------------------------------
     CguiDeleteButton(&myButton);
     CguiDeleteDropDownButton(&ddButton);
+    CguiDeleteRepeatButton(&rpButton);
+    CguiDeleteHyperLinkButton(&hpButton);
     UnloadTexture(background);
     CguiUnload();        // Unload the Cgui resources
     CloseWindow();

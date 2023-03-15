@@ -74,6 +74,10 @@
     #define TRANSITION_SPEED            10.0f
 #endif
 
+#ifndef REPEAT_SPEED
+    #define REPEAT_SPEED                1.25f
+#endif
+
 #ifndef __cplusplus
     // Boolean type
     #if !(defined(false) || defined(true) || defined(bool))
@@ -96,6 +100,10 @@ typedef struct Element {
     void *next;
 } Element;
 
+//----------------------------------------------------------------------------------
+// List storage data type
+//----------------------------------------------------------------------------------
+
 typedef struct List {
     /* The base does not contain an element,
      * the next of the base is the index of 0 */
@@ -103,10 +111,6 @@ typedef struct List {
     int size;
     int typesize;
 } List;
-
-//----------------------------------------------------------------------------------
-// List manipulation functions
-//----------------------------------------------------------------------------------
 
 List *CreateList(int typesize);                 // Create a new Linked List, returns NULL if failed
 Element *GetElement(int index, List *list);     // Get element from the index, returns NULL if invalid index or failed
@@ -174,7 +178,7 @@ typedef enum {
 // Cgui button variable
 typedef struct CguiButton {
     Rectangle bounds;
-    char *text;
+    const char *text;
     int __state;
     float __timer;
 } CguiButton;
@@ -187,6 +191,24 @@ typedef struct CguiDropDownButton {
     bool __dropdownActive;
     float __dropDownHeigh;
 } CguiDropDownButton;
+
+// Cgui button variable with repeater
+typedef struct CguiRepeatButton {
+    Rectangle bounds;
+    const char *text;
+    int __state;
+    float __timer;
+    float __repeatTimer;
+} CguiRepeatButton;
+
+// Cgui button variable with link
+typedef struct CguiHyperLinkButton {
+    Rectangle bounds;
+    const char *text;
+    const char *url;
+    int __state;
+    float __timer;
+} CguiHyperLinkButton;
 
 //----------------------------------------------------------------------------------
 // Module Functions Declaration
@@ -219,19 +241,27 @@ CGAPI void CguiDrawText(const char *text, Rectangle bounds);   // Draw text with
 // Cgui functions
 //----------------------------------------------------------------------------------
 
-CGAPI bool CguiUpdateButton(CguiButton *button);                  // Cgui update button, returns true when clicked
-CGAPI void CguiDrawButton(CguiButton *button);                    // Draw Cgui button
-CGAPI int CguiUpdateDropDownButton(CguiDropDownButton *ddButton); // Cgui update drop down button, returns clicked entry
-CGAPI void CguiDrawDropDownButton(CguiDropDownButton *ddButton);  // Draw Cgui drop down button
+CGAPI bool CguiUpdateButton(CguiButton *button);                   // Cgui update button, returns true when clicked
+CGAPI void CguiDrawButton(CguiButton *button);                     // Draw Cgui button
+CGAPI int CguiUpdateDropDownButton(CguiDropDownButton *ddButton);  // Cgui update drop down button, returns clicked entry
+CGAPI void CguiDrawDropDownButton(CguiDropDownButton *ddButton);   // Draw Cgui drop down button
+CGAPI bool CguiUpdateRepeatButton(CguiRepeatButton *button);       // Cgui update repeat button, returns true when held
+CGAPI void CguiDrawRepeatButton(CguiRepeatButton *button);         // Draw Cgui repeat button
+CGAPI bool CguiUpdateHyperLinkButton(CguiHyperLinkButton *button); // Cgui update hyper link button, returns true when clicked and opens url
+CGAPI void CguiDrawHyperLinkButton(CguiHyperLinkButton *button);   // Draw Cgui hyper link button
 
 //----------------------------------------------------------------------------------
 // Cgui constructors
 //----------------------------------------------------------------------------------
 
-CGAPI CguiButton CguiCreateButton(Rectangle bounds, char *text);  // Create button for easier initialization
-CGAPI void CguiDeleteButton(CguiButton *cguiButton);              // Delete created button
+CGAPI CguiButton CguiCreateButton(Rectangle bounds, const char *text);             // Create button for easier initialization
+CGAPI void CguiDeleteButton(CguiButton *cguiButton);                               // Delete created button
 CGAPI CguiDropDownButton CguiCreateDropDownButton(Rectangle bounds, const char *texts[], int textCount, int defaultSelected); // Create drop down button for easier initialization
-CGAPI void CguiDeleteDropDownButton(CguiDropDownButton *cguiDropDownButton); // Delete created drop down button
+CGAPI void CguiDeleteDropDownButton(CguiDropDownButton *cguiDropDownButton);       // Delete created drop down button
+CGAPI CguiRepeatButton CguiCreateRepeatButton(Rectangle bounds, const char *text); // Create repeat button for easier initialization
+CGAPI void CguiDeleteRepeatButton(CguiRepeatButton *cguiRepeatButton);             // Delete created repeat button
+CGAPI CguiHyperLinkButton CguiCreateHyperLinkButton(Rectangle bounds, const char *text, const char *url); // Create hyper link button for easier initialization
+CGAPI void CguiDeleteHyperLinkButton(CguiHyperLinkButton *cguiHyperLinkButton);    // Delete created hyper link button
 
 //----------------------------------------------------------------------------------
 // Theme settings
@@ -949,17 +979,16 @@ float CguiClamp(float value, float min, float max)
 }
 
 // Draw the contents from the input background (non-blurred)
-CGAPI void CguiDrawBackground(void)
+void CguiDrawBackground(void)
 {
     DrawTexturePro(cguiInputBackground.texture, CGUI_CLITERAL(Rectangle){ 0.0f, 0.0f, cguiScreenResolution[0], -cguiScreenResolution[1] }, CGUI_CLITERAL(Rectangle){ 0.0f, 0.0f, cguiScreenResolution[0], cguiScreenResolution[1] }, CGUI_CLITERAL(Vector2){ 0.0f, 0.0f }, 0.0f, WHITE);
 }
 
 // Draw the blurred background
-CGAPI void CguiDrawBlurredBackground(void)
+void CguiDrawBlurredBackground(void)
 {
     DrawTexturePro(cguiBlurredBackground.texture, CGUI_CLITERAL(Rectangle){ 0.0f, 0.0f, cguiScreenResolution[0], -cguiScreenResolution[1] }, CGUI_CLITERAL(Rectangle){ 0.0f, 0.0f, cguiScreenResolution[0], cguiScreenResolution[1] }, CGUI_CLITERAL(Vector2){ 0.0f, 0.0f }, 0.0f, WHITE);
 }
-
 
 // Draw shader processed rectangle
 void CguiDrawRectangle(Rectangle bounds, Color tint, Color shadowColor)
@@ -1047,10 +1076,8 @@ bool CguiUpdateButton(CguiButton *button)
             button->__timer = CguiClamp(button->__timer + TRANSITION_SPEED * GetFrameTime(), 0.0f, 1.0f);
 
             button->__state = CGUI_STATE_FOCUSED;
-            if (IsMouseButtonDown(cguiMouseButton))
-                button->__state = CGUI_STATE_PRESSED;
-            if (IsMouseButtonReleased(cguiMouseButton))
-                result = true;
+            if (IsMouseButtonDown(cguiMouseButton)) button->__state = CGUI_STATE_PRESSED;
+            if (IsMouseButtonReleased(cguiMouseButton)) result = true;
         }
         else button->__timer = CguiClamp(button->__timer - TRANSITION_SPEED * GetFrameTime(), 0.0f, 1.0f);
     }
@@ -1160,12 +1187,93 @@ void CguiDrawDropDownButton(CguiDropDownButton *ddButton)
     cguiColors[CGUI_COLOR_SHADOW] = shadowShaderColor;
 }
 
+// Cgui update repeat button, returns true when held
+bool CguiUpdateRepeatButton(CguiRepeatButton *button)
+{
+    // Prevent function usage if resources are not loaded
+    if (!cguiLoaded) return false;
+
+    Color color;
+    bool result = false;
+
+    // Update state, do not update state if Global state is not set
+    if (button->__state != CGUI_STATE_DISABLED && cguiGlobalState == 0)
+    {
+        button->__state = CGUI_STATE_NORMAL;
+
+        // Mouse is on top of button
+        if (CheckCollisionPointRec(GetMousePosition(), button->bounds))
+        {
+            // Update the timer for shadow transition
+            button->__timer = CguiClamp(button->__timer + TRANSITION_SPEED * GetFrameTime(), 0.0f, 1.0f);
+
+            button->__state = CGUI_STATE_FOCUSED;
+            if (IsMouseButtonDown(cguiMouseButton))
+            {
+                button->__state = CGUI_STATE_PRESSED;
+                button->__repeatTimer = CguiClamp(button->__repeatTimer + REPEAT_SPEED * GetFrameTime() * 2.0f, 0.0f, 1.0f);
+            }
+            if (IsMouseButtonPressed(cguiMouseButton)) result = true;
+        }
+        else button->__timer = CguiClamp(button->__timer - TRANSITION_SPEED * GetFrameTime(), 0.0f, 1.0f);
+
+        // If mouse button is not pressed, reset the timer
+        if (!IsMouseButtonDown(cguiMouseButton)) button->__repeatTimer = 0.0f;
+
+        // Set the result as condition of repeat timer
+        if (!result) result = (button->__repeatTimer == 1.0f);
+    }
+    else button->__state = cguiGlobalState - 1;
+    return result;
+}
+
+// Draw Cgui repeat button
+void CguiDrawRepeatButton(CguiRepeatButton *button)
+{
+    CguiButton cguiButton = { button->bounds, button->text, button->__state, button->__timer };
+    CguiDrawButton(&cguiButton);
+}
+
+// Cgui update hyper link button, returns true when clicked and opens url
+bool CguiUpdateHyperLinkButton(CguiHyperLinkButton *button)
+{
+    CguiButton cguiButton = { button->bounds, button->text, button->__state, button->__timer };
+    
+    // Use existing function
+    int result = CguiUpdateButton(&cguiButton);
+
+    button->__state = cguiButton.__state;
+    button->__timer = cguiButton.__timer;
+
+    // Open url from button
+    if (result) OpenURL(button->url);
+
+    return result;
+}
+
+// Draw Cgui hyper link button
+void CguiDrawHyperLinkButton(CguiHyperLinkButton *button)
+{
+    CguiButton cguiButton = { button->bounds, button->text, button->__state, button->__timer };
+
+    Color foregroundColor = cguiColors[CGUI_COLOR_FOREGROUND];
+
+    // temporarily make foreground color as active color for font
+    cguiColors[CGUI_COLOR_FOREGROUND] = cguiColors[CGUI_COLOR_ACTIVE];
+
+    // Use existing function
+    CguiDrawButton(&cguiButton);
+
+    // Reset color back
+    cguiColors[CGUI_COLOR_FOREGROUND] = foregroundColor;
+}
+
 //----------------------------------------------------------------------------------
 // Cgui constructors
 //----------------------------------------------------------------------------------
 
 // Create button for easier initialization
-CguiButton CguiCreateButton(Rectangle bounds, char *text)
+CguiButton CguiCreateButton(Rectangle bounds, const char *text)
 {
     CguiButton button = { bounds, text };
     button.__state = 0;
@@ -1202,12 +1310,52 @@ CguiDropDownButton CguiCreateDropDownButton(Rectangle bounds, const char *texts[
 // Delete created drop down button
 void CguiDeleteDropDownButton(CguiDropDownButton *cguiDropDownButton)
 {
-    ClearList(cguiDropDownButton->entries);
+    // The list is automatically cleared
+    DeleteList(cguiDropDownButton->entries);
     cguiDropDownButton->entries = NULL;
     CguiDeleteButton(&cguiDropDownButton->button);
     cguiDropDownButton->selectedEntry = 0;
     cguiDropDownButton->__dropdownActive = false;
     cguiDropDownButton->__dropDownHeigh = 0.0f;
+}
+
+// Create repeat button for easier initialization
+CguiRepeatButton CguiCreateRepeatButton(Rectangle bounds, const char *text)
+{
+    CguiRepeatButton button = { bounds, text };
+    button.__state = 0;
+    button.__timer = 0.0f;
+    button.__repeatTimer = 0.0f;
+    return button;
+}
+
+// Delete created repeat button
+void CguiDeleteRepeatButton(CguiRepeatButton *cguiRepeatButton)
+{
+    cguiRepeatButton->bounds = (Rectangle){ 0.0f, 0.0f, 0.0f, 0.0f };
+    cguiRepeatButton->text = NULL;
+    cguiRepeatButton->__state = 0;
+    cguiRepeatButton->__timer = 0.0f;
+    cguiRepeatButton->__repeatTimer = 0.0f;
+}
+
+// Create hyper link button for easier initialization
+CguiHyperLinkButton CguiCreateHyperLinkButton(Rectangle bounds, const char *text, const char *url)
+{
+    CguiHyperLinkButton button = { bounds, text, url };
+    button.__state = 0;
+    button.__timer = 0.0f;
+    return button;
+}
+
+// Delete created hyper link button
+void CguiDeleteHyperLinkButton(CguiHyperLinkButton *cguiHyperLinkButton)
+{
+    cguiHyperLinkButton->bounds = (Rectangle){ 0.0f, 0.0f, 0.0f, 0.0f };
+    cguiHyperLinkButton->text = NULL;
+    cguiHyperLinkButton->url = NULL;
+    cguiHyperLinkButton->__state = 0;
+    cguiHyperLinkButton->__timer = 0.0f;
 }
 
 //----------------------------------------------------------------------------------
