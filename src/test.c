@@ -56,6 +56,7 @@ int main(void)
     fontProp.font = LoadFontEx("../res/Roboto-Regular.ttf", fontProp.size, NULL, 0);
     CguiSetFontProperty(fontProp);
 
+    // Cgui customization
     Texture background = LoadTexture("../res/background.png");
     bool useWallpaper = false, theme = false;
 
