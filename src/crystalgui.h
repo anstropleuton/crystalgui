@@ -59,16 +59,12 @@
 #endif
 
 #ifndef CGAPI
-    #define CGAPI       // Functions defined as 'extern' by default (implicit specifiers)
+    #define CGAPI                               // Functions defined as 'extern' by default (implicit specifiers)
 #endif
 
 //----------------------------------------------------------------------------------
 // Defines and Macros
 //----------------------------------------------------------------------------------
-
-#if !defined(CGUI_MAX_TRACELOG_MSG_LENGTH)
-    #define CGUI_MAX_TRACELOG_MSG_LENGTH 128     // Max length of one trace-log message
-#endif
 
 #ifndef TRANSITION_SPEED
     #define TRANSITION_SPEED            10.0f
@@ -132,43 +128,55 @@ int DeleteList(List *list);                     // Delete a Linked List, returns
 
 // CguiIcon, icons are textures
 typedef struct CguiIcon {
-    Texture texture;
-    const char *name;
+    Texture texture;                            // Icon texture
+    const char *name;                           // Icon name
 } CguiIcon;
 
+// Font properties for easier (or harder) font management
 typedef struct FontProp {
-    Font font;
-    float size;
-    float spacing;
-    float shadowBlurRadius;
-    Vector2 shadowOffset;
-    Color shadowColor;
+    Font font;                                  // Font used in Cgui
+    float size;                                 // Font size for Cgui
+    float spacing;                              // Font spacing for Cgui
+    float shadowBlurRadius;                     // Drop down font shadow radius
+    Vector2 shadowOffset;                       // Drop down font shadow offset
+    Color shadowColor;                          // Drop down font shadow color
 } FontProp;
 
 //----------------------------------------------------------------------------------
 // Enumeration definition
 //----------------------------------------------------------------------------------
 
-// Gui control state
-typedef enum {
-    CGUI_STATE_NORMAL = 0,
-    CGUI_STATE_FOCUSED,
-    CGUI_STATE_PRESSED,
-    CGUI_STATE_ACTIVE,
-    CGUI_STATE_DISABLED,
+// Cgui state
+typedef enum CguiState {
+    CGUI_STATE_NORMAL = 0,                      // Nothing's happening
+    CGUI_STATE_FOCUSED,                         // Mouse is on top of the Cgui
+    CGUI_STATE_PRESSED,                         // Mouse is on top of the Cgui and is pressed
+    CGUI_STATE_ACTIVE,                          // Cgui is active
+    CGUI_STATE_DISABLED,                        // Cgui cannot do anything
+    CGUI_STATE_MAX                              // Required when making an array of states
 } CguiState;
 
 // List of colors
-typedef enum {
-    CGUI_COLOR_BACKGROUND = 0,
-    CGUI_COLOR_FOREGROUND,
-    CGUI_COLOR_ACTIVE,
-    CGUI_COLOR_UNKNOWN,
-    CGUI_COLOR_DANGER,
-    CGUI_COLOR_DISABLED,
-    CGUI_COLOR_SHADOW,
-    CGUI_COLOR_ALL,
+typedef enum CguiColors {
+    CGUI_COLOR_BACKGROUND = 0,                  // Background color (usually white/black)
+    CGUI_COLOR_FOREGROUND,                      // Foreground color (usually black/white)
+    CGUI_COLOR_ACTIVE,                          // Activated color  (usually blue)
+    CGUI_COLOR_UNKNOWN,                         // Unknown color    (usually yellow)
+    CGUI_COLOR_DANGER,                          // Dangerous color  (usually red)
+    CGUI_COLOR_DISABLED,                        // Disabled color   (usually gray)
+    CGUI_COLOR_SHADOW,                          // Shadow color     (usually black/white)
+    CGUI_COLOR_MAX                              // Required when making an array of colors
 } CguiColors;
+
+// Global configurations
+typedef enum CguiGlobalConfig {
+    CGUI_CONFIG_STATE,                          // Global Cgui state
+    CGUI_CONFIG_MOUSE_ACTIVE,                   // boolean, whether the mouse is on top of a Cgui component
+    CGUI_CONFIG_KEYBOARD_ACTIVE,                // boolean, whether the keyboard is being used in Cgui component
+    CGUI_CONFIG_DROPDOWN_ACTIVE,                // boolean, whether any drop down button is active
+    CGUI_CONFIG_POPUP_ACTIVE,                   // boolean, whether any popup is activated
+    CGUI_CONFIG_MAX                             // Required when making an array of config
+} CguiGlobalConfig;
 
 //----------------------------------------------------------------------------------
 // Cgui Function Types
@@ -177,38 +185,47 @@ typedef enum {
 
 // Cgui button variable
 typedef struct CguiButton {
-    Rectangle bounds;
-    const char *text;
-    int __state;
-    float __timer;
+    Rectangle bounds;                           // Bounding box of the button
+    const char *text;                           // Text of the button
+    int __state;                                // INTERNAL: State of the button
+    float __timer;                              // INTERNAL: Shadow fade timer of the button
 } CguiButton;
 
 // Cgui drop down button variable
 typedef struct CguiDropDownButton {
-    CguiButton button;
-    List *entries;
-    int selectedEntry;
-    bool __dropdownActive;
-    float __dropDownHeigh;
+    CguiButton button;                          // Bounding box of the button
+    List *entries;                              // List of sub-buttons of drop down
+    int selectedEntry;                          // Currently selected sub-button
+    bool __dropdownActive;                      // INTERNAL: Drop down box active
+    float __dropDownHeigh;                      // INTERNAL: Drop down box height timer
 } CguiDropDownButton;
 
 // Cgui button variable with repeater
 typedef struct CguiRepeatButton {
-    Rectangle bounds;
-    const char *text;
-    int __state;
-    float __timer;
-    float __repeatTimer;
+    Rectangle bounds;                           // Bounding box of the repeat button
+    const char *text;                           // Text of the repeat button
+    int __state;                                // INTERNAL: State of the repeat button
+    float __timer;                              // INTERNAL: Shadow fade timer of the repeat button
+    float __repeatTimer;                        // INTERNAL: Repeat delay timer of the repeat button
 } CguiRepeatButton;
 
 // Cgui button variable with link
 typedef struct CguiHyperLinkButton {
-    Rectangle bounds;
-    const char *text;
-    const char *url;
-    int __state;
-    float __timer;
+    Rectangle bounds;                           // Bounding box of the hyper link button
+    const char *text;                           // Text of the hyper link button
+    const char *url;                            // URL of the hyper link button
+    int __state;                                // INTERNAL: State of the hyper link button
+    float __timer;                              // INTERNAL: Shadow fade timer of the hyper link button
 } CguiHyperLinkButton;
+
+// Cgui button variable with active background color
+typedef CguiButton CguiActiveButton;
+
+// Cgui button variable with unknown background color
+typedef CguiButton CguiUnknownButton;
+
+// Cgui button variable with danger background color
+typedef CguiButton CguiDangerButton;
 
 //----------------------------------------------------------------------------------
 // Module Functions Declaration
@@ -227,9 +244,9 @@ CGAPI void CguiUnload(void);                          // Unload the Cgui resourc
 CGAPI void CguiBeginBackground(void);                 // Begin drawing into the background. To make it blur behind the Cgui!
 CGAPI void CguiEndBackground(void);                   // End the drawing, this function will immediately process the blur.
 CGAPI void CguiUpdateResolution(void);                // This will update the global variables like resoluion, etc. (Internally called)
+CGAPI void CguiClearGlobalConfig(void);               // Clear the Cgui global config states
 
 CGAPI void CguiNoTraceLog(int logType, const char *text, ...); // TraceLog that doesn't print anything, useful to not log something
-CGAPI void CguiTraceLog(const char *text, ...);                // Logger used in Cgui functions
 CGAPI Color CguiGetStateColor(int state);                      // Get the color depending on the state and ratio of old to new, ratio goes from 0.0f to 1.0f
 CGAPI float CguiClamp(float value, float min, float max);      // Clamp value between min amd max
 CGAPI void CguiDrawBackground(void);                           // Draw the contents from the input background (non-blurred)
@@ -243,25 +260,37 @@ CGAPI void CguiDrawText(const char *text, Rectangle bounds);   // Draw text with
 
 CGAPI bool CguiUpdateButton(CguiButton *button);                   // Cgui update button, returns true when clicked
 CGAPI void CguiDrawButton(CguiButton *button);                     // Draw Cgui button
-CGAPI int CguiUpdateDropDownButton(CguiDropDownButton *ddButton);  // Cgui update drop down button, returns clicked entry
+CGAPI bool CguiUpdateDropDownButton(CguiDropDownButton *ddButton);  // Cgui update drop down button, returns true when selected entry changes
 CGAPI void CguiDrawDropDownButton(CguiDropDownButton *ddButton);   // Draw Cgui drop down button
 CGAPI bool CguiUpdateRepeatButton(CguiRepeatButton *button);       // Cgui update repeat button, returns true when held
 CGAPI void CguiDrawRepeatButton(CguiRepeatButton *button);         // Draw Cgui repeat button
 CGAPI bool CguiUpdateHyperLinkButton(CguiHyperLinkButton *button); // Cgui update hyper link button, returns true when clicked and opens url
 CGAPI void CguiDrawHyperLinkButton(CguiHyperLinkButton *button);   // Draw Cgui hyper link button
+CGAPI bool CguiUpdateActiveButton(CguiActiveButton *button);       // Cgui update button, returns true when clicked
+CGAPI void CguiDrawActiveButton(CguiActiveButton *button);         // Draw Cgui button
+CGAPI bool CguiUpdateUnknownButton(CguiUnknownButton *button);     // Cgui update button, returns true when clicked
+CGAPI void CguiDrawUnknownButton(CguiUnknownButton *button);       // Draw Cgui button
+CGAPI bool CguiUpdateDangerButton(CguiDangerButton *button);       // Cgui update button, returns true when clicked
+CGAPI void CguiDrawDangerButton(CguiDangerButton *button);         // Draw Cgui button
 
 //----------------------------------------------------------------------------------
 // Cgui constructors
 //----------------------------------------------------------------------------------
 
 CGAPI CguiButton CguiCreateButton(Rectangle bounds, const char *text);             // Create button for easier initialization
-CGAPI void CguiDeleteButton(CguiButton *cguiButton);                               // Delete created button
-CGAPI CguiDropDownButton CguiCreateDropDownButton(Rectangle bounds, const char *texts[], int textCount, int defaultSelected); // Create drop down button for easier initialization
-CGAPI void CguiDeleteDropDownButton(CguiDropDownButton *cguiDropDownButton);       // Delete created drop down button
+CGAPI void CguiDeleteButton(CguiButton *button);                                   // Delete created button
+CGAPI CguiDropDownButton CguiCreateDropDownButton(Rectangle bounds, const char *texts[], int textCount); // Create drop down button for easier initialization
+CGAPI void CguiDeleteDropDownButton(CguiDropDownButton *button);                   // Delete created drop down button
 CGAPI CguiRepeatButton CguiCreateRepeatButton(Rectangle bounds, const char *text); // Create repeat button for easier initialization
-CGAPI void CguiDeleteRepeatButton(CguiRepeatButton *cguiRepeatButton);             // Delete created repeat button
+CGAPI void CguiDeleteRepeatButton(CguiRepeatButton *button);                       // Delete created repeat button
 CGAPI CguiHyperLinkButton CguiCreateHyperLinkButton(Rectangle bounds, const char *text, const char *url); // Create hyper link button for easier initialization
-CGAPI void CguiDeleteHyperLinkButton(CguiHyperLinkButton *cguiHyperLinkButton);    // Delete created hyper link button
+CGAPI void CguiDeleteHyperLinkButton(CguiHyperLinkButton *button);                 // Delete created hyper link button
+CGAPI CguiActiveButton CguiCreateActiveButton(Rectangle bounds, const char *text); // Create button for easier initialization
+CGAPI void CguiDeleteActiveButton(CguiActiveButton *button);                       // Delete created button
+CGAPI CguiUnknownButton CguiCreateUnknownButton(Rectangle bounds, const char *text); // Create button for easier initialization
+CGAPI void CguiDeleteUnknownButton(CguiUnknownButton *button);                     // Delete created button
+CGAPI CguiDangerButton CguiCreateDangerButton(Rectangle bounds, const char *text); // Create button for easier initialization
+CGAPI void CguiDeleteDangerButton(CguiDangerButton *button);                       // Delete created button
 
 //----------------------------------------------------------------------------------
 // Theme settings
@@ -284,6 +313,8 @@ CGAPI void CguiSetFontProperty(FontProp fontProp);
 CGAPI FontProp CguiGetFontProperty(void);
 CGAPI void CguiSteBoundarySize(float boundarySize);
 CGAPI float CguiGetBoundarySize(void);
+CGAPI void CguiSetConfig(int configId, int config);
+CGAPI int CguiGetConfig(int configId);
 
 CGAPI void CguiSetColor(int colorId, Color color);
 CGAPI Color CguiGetColor(int colorId);
@@ -368,173 +399,6 @@ CGAPI Vector2 CguiGetShadowOffset(void);
     #define CGUI_CLITERAL(name) (name)
 #endif
 
-/************************************************************************************
-*
-*   LINKED LIST IMPLEMENTATION
-*
-************************************************************************************/
-
-// Create a new Linked List, returns NULL if failed
-List *CreateList(int typesize)
-{
-    List *list = (List *) RL_MALLOC(sizeof(List));
-    if (!list) return NULL;
-
-    list->size = 0;
-    list->typesize = typesize;
-    list->base = (Element *) RL_MALLOC(sizeof(Element));
-
-    if (!list->base) { return NULL; }
-
-    list->base->data = NULL;
-    list->base->next = NULL;
-    return list;
-}
-
-// Get element from the index, returns NULL if invalid index or failed
-Element *GetElement(int index, List *list)
-{
-    Element *element = NULL;
-    if (!list) { return NULL; }
-    element = list->base;
-
-    // Note, I am not using 'i <= index' because I want
-    // the size to overflow in case the index was -1
-    for (int i = 0; i < (index + 1); i++)
-    {
-        element = (Element *) element->next;
-        if (!element) { return NULL; }
-    }
-    return element;
-}
-
-// Update the size of a linked list internally, returns non-zero if failed
-int UpdateListSize(List *list)
-{
-    Element *element = NULL;
-    int size = 0;
-
-    if (!list) { return 1; }
-    element = list->base;
-
-    while (element)
-    {
-        element = (Element *) element->next;
-        size++;
-    }
-
-    // The base is not considered as an element
-    --size;
-    return 0;
-}
-
-// Get the size of a linked list, returns 0 when no elements are available or when failed
-int GetListSize(List *list)
-{
-    if (!list) { return 0; }
-    if (UpdateListSize(list)) { return 0; }
-    return list->size;
-}
-
-// Create an element, returns NULL if failed. These functions are not supposed to be used externally
-Element *CreateElemet(int typesize)
-{
-    Element *element = (Element *) RL_MALLOC(sizeof(Element));
-    if (!element) { return NULL; }
-
-    element->next = NULL;
-    element->data = RL_MALLOC(typesize);
-    if (!element->data) { return NULL; }
-
-    return element;
-}
-
-// Delete an element, returns non-zero if failed. These functions are not supposed to be used externally
-int DeleteElement(Element *element)
-{
-    if (!element) { return 1; }
-    if (!element->data) { return 2; }
-
-    RL_FREE(element->data);
-    RL_FREE(element);
-    return 0;
-}
-
-// Add element to a linked list. You can add element at the end of a linked list by giving it the size of a linked list
-Element *AddElement(int index, List *list)
-{
-    Element *new_element = NULL;
-    Element *prev = NULL;
-    Element *temp = NULL;
-
-    if (!list) { return NULL; }
-    if (index > list->size) { return NULL; }
-
-    prev = GetElement(index - 1, list);
-    new_element = CreateElemet(list->typesize);
-
-    if (!new_element) { return NULL; }
-    // There can't be no previous because the base should exist
-    if (!prev) { return NULL; }
-
-    temp = (Element *) prev->next;
-    prev->next = (void *) new_element;
-    new_element->next = (void *) temp;
-
-    list->size++;
-    return new_element;
-}
-
-// Remove element from the index, returns non-zero if invalid index or failed
-int RemoveElement(int index, List *list)
-{
-    Element *element = NULL;
-    Element *prev = NULL;
-    Element *next = NULL;
-
-    if (!list) { return 1; }
-    if (index >= list->size) { return 3; }
-
-    element = GetElement(index, list);
-    if (!element) { return 4; }
-
-    prev = GetElement(index - 1, list);
-
-    // To prevent unnecessary error logs, I used an 'if' check
-    if (index < list->size - 1) { next = GetElement(index + 1, list); }
-    if (!prev) { return 5; }
-
-    prev->next = NULL;
-    if (next) { prev->next = next; }
-
-    if (DeleteElement(element)) { return 6; }
-
-    list->size--;
-    return 0;
-}
-
-// Remove all the elements from a linked list, returns non-zero if faied
-int ClearList(List *list)
-{
-    if (!list) { return 1; }
-    if (list->size == 0) { return 0; }
-
-    for (int i = list->size - 1; i >= 0; i--)
-        RemoveElement(i, list);
-    return 0;
-}
-
-// Delete a Linked List, returns non-zero if faied
-int DeleteList(List *list)
-{
-    if (!list) { return 1; }
-    if (ClearList(list)) { return 2; }
-    if (!list->base) { return 3; }
-    RL_FREE(list->base);
-    RL_FREE(list);
-    return 0;
-}
-
 //----------------------------------------------------------------------------------
 // Global Variables Definition
 //----------------------------------------------------------------------------------
@@ -542,14 +406,14 @@ int DeleteList(List *list)
 static bool cguiLoaded = false;               // Prevent functions from using unloaded resources
 static float cguiScreenResolution[2] = { 0 }; // Screen resolution for shaders and buffer
 static CguiIcon cguiIcons[256] = { 0 };       // Each icon texture size is 128x128
-static int cguiGlobalState = 0;               // Default Cgui state if this value is 0
+static int cguiGlobalConfig[CGUI_CONFIG_MAX] = { 0 }; // Keep track of states
 static float cguiBoundarySize;                // Boundry spacing size
 
 static TraceLogCallback cguiDefaultTraceLog = NULL; // NULL to log using raylib's TraceLog
 static TraceLogCallback cguiNoTraceLog = NULL;      // Prevent logs whenever shader value is set
 static int cguiMouseButton = 0;                     // Main mouse button clicks
 static FontProp cguiFontProperty = { 0 };           // Many font properties combined
-static Color cguiColors[CGUI_COLOR_ALL] = { 0 };    // All the colors used in Cgui
+static Color cguiColors[CGUI_COLOR_MAX] = { 0 };    // All the colors used in Cgui
 
 static Vector3 cguiFocusedFade = { 0 };       // Cgui hsv multiplied modification when the mouse is on top of a Cgui component
 static Vector3 cguiPressedFade = { 0 };       // Cgui hsv multiplied modification when the Cgui mouse button is pressed
@@ -600,7 +464,7 @@ static int cguiRectangleShaderRectangleTintLoc = 0;
 // Shader codes
 //----------------------------------------------------------------------------------
 
-static char cguiBlurShaderCode[] = ""
+static char cguiBlurShaderCode[] =
     // Note: I am not specifying any version of the shader since I am not certain
     "#ifdef GL_ES\n"
     "precision mediump float;\n"
@@ -628,7 +492,7 @@ static char cguiBlurShaderCode[] = ""
         "\tgl_FragColor = finalColor;\n"
     "}\n";
 
-static char shadowShaderCode[] = ""
+static char shadowShaderCode[] =
     "#ifdef GL_ES\n"
     "precision mediump float;\n"
     "#endif\n"
@@ -659,7 +523,7 @@ static char shadowShaderCode[] = ""
         "\tgl_FragColor = u_shadowColor * shadowRBSDF;\n"
     "}\n";
 
-static char rectangleShaderCode[] = ""
+static char rectangleShaderCode[] =
     "#ifdef GL_ES\n"
     "precision mediump float;\n"
     "#endif\n"
@@ -692,26 +556,11 @@ static char rectangleShaderCode[] = ""
 // Internal functions
 //----------------------------------------------------------------------------------
 
-// Get minimum of two numbers
-static int CguiMin(int a, int b)
-{
-    return (a < b) ? a : b;
-}
-
-// Get maximum of two numbers
-static int CguiMax(int a, int b)
-{
-    return (a > b) ? a : b;
-}
-
 // Get icon from the text
 static int CguiGetIcon(const char *text)
 {
-
+    return 0;
 }
-
-// Split the characters
-// ...
 
 //----------------------------------------------------------------------------------
 // Declarations
@@ -809,7 +658,6 @@ void CguiUnload(void)
     UnloadRenderTexture(cguiFontBlurBuffer);
 
     cguiLoaded = false;
-    cguiGlobalState = 0;
     cguiBoundarySize = 0;
     cguiDefaultTraceLog = (TraceLogCallback)NULL;
     cguiNoTraceLog = (TraceLogCallback)NULL;
@@ -920,6 +768,17 @@ void CguiUpdateResolution(void)
     }
 }
 
+// Clear the Cgui global config states
+void CguiClearGlobalConfig(void)
+{
+    cguiGlobalConfig[CGUI_CONFIG_STATE] = 0;
+    cguiGlobalConfig[CGUI_CONFIG_MOUSE_ACTIVE] = 0;
+    cguiGlobalConfig[CGUI_CONFIG_KEYBOARD_ACTIVE] = 0;
+    cguiGlobalConfig[CGUI_CONFIG_DROPDOWN_ACTIVE] = 0;
+    cguiGlobalConfig[CGUI_CONFIG_POPUP_ACTIVE] = 0;
+    cguiGlobalConfig[CGUI_CONFIG_MAX] = 0;
+}
+
 // TraceLog that doesn't print anything, useful to not log something
 void CguiNoTraceLog(int logType, const char *text, ...)
 {
@@ -929,22 +788,6 @@ void CguiNoTraceLog(int logType, const char *text, ...)
     // Do nothing
 }
 
-// Custom logger for no reason at all
-void CguiTraceLog(const char *text, ...)
-{
-    va_list args;
-    va_start(args, text);
-    char buffer[CGUI_MAX_TRACELOG_MSG_LENGTH] = { 0 };
-
-    strcpy(buffer, "CGUI: ");
-    strcat(buffer, text);
-    strcat(buffer, "\n");
-    vprintf(buffer, args);
-    fflush(stdout);
-
-    va_end(args);
-}
-
 // Get the color depending on the state and ratio of old to new, ratio goes from 0.0f to 1.0f
 Color CguiGetStateColor(int state)
 {
@@ -952,16 +795,16 @@ Color CguiGetStateColor(int state)
 
     switch (state)
     {
-    case CGUI_STATE_NORMAL:
-        return cguiColors[CGUI_COLOR_BACKGROUND];
     case CGUI_STATE_FOCUSED:
         return ColorAlpha(ColorFromHSV(hsvColor.x + cguiFocusedFade.x, hsvColor.y + cguiFocusedFade.y, hsvColor.z + cguiFocusedFade.z), cguiColors[CGUI_COLOR_BACKGROUND].a / 255.0f);
     case CGUI_STATE_PRESSED:
         return ColorAlpha(ColorFromHSV(hsvColor.x + cguiPressedFade.x, hsvColor.y + cguiPressedFade.y, hsvColor.z + cguiPressedFade.z), cguiColors[CGUI_COLOR_BACKGROUND].a / 255.0f);
     case CGUI_STATE_ACTIVE:
-        return cguiColors[CGUI_COLOR_FOREGROUND];
+        return cguiColors[CGUI_COLOR_ACTIVE];
     case CGUI_STATE_DISABLED:
         return cguiColors[CGUI_COLOR_DISABLED];
+    default:
+        return cguiColors[CGUI_COLOR_BACKGROUND];
     }
 }
 
@@ -1065,23 +908,26 @@ bool CguiUpdateButton(CguiButton *button)
     bool result = false;
 
     // Update state, do not update state if Global state is not set
-    if (button->__state != CGUI_STATE_DISABLED && cguiGlobalState == 0)
+    if (button->__state == CGUI_STATE_DISABLED || cguiGlobalConfig[CGUI_CONFIG_STATE] != 0)
     {
-        button->__state = CGUI_STATE_NORMAL;
-
-        // Mouse is on top of button
-        if (CheckCollisionPointRec(GetMousePosition(), button->bounds))
-        {
-            // Update the timer for shadow transition
-            button->__timer = CguiClamp(button->__timer + TRANSITION_SPEED * GetFrameTime(), 0.0f, 1.0f);
-
-            button->__state = CGUI_STATE_FOCUSED;
-            if (IsMouseButtonDown(cguiMouseButton)) button->__state = CGUI_STATE_PRESSED;
-            if (IsMouseButtonReleased(cguiMouseButton)) result = true;
-        }
-        else button->__timer = CguiClamp(button->__timer - TRANSITION_SPEED * GetFrameTime(), 0.0f, 1.0f);
+        button->__state = cguiGlobalConfig[CGUI_CONFIG_STATE] - 1;
+        return false;
     }
-    else button->__state = cguiGlobalState - 1;
+
+    button->__state = CGUI_STATE_NORMAL;
+
+    // Mouse is on top of button
+    if (CheckCollisionPointRec(GetMousePosition(), button->bounds))
+    {
+        // Update the timer for shadow transition
+        button->__timer = CguiClamp(button->__timer + TRANSITION_SPEED * GetFrameTime(), 0.0f, 1.0f);
+        cguiGlobalConfig[CGUI_CONFIG_MOUSE_ACTIVE] = true;
+
+        button->__state = CGUI_STATE_FOCUSED;
+        if (IsMouseButtonDown(cguiMouseButton)) button->__state = CGUI_STATE_PRESSED;
+        if (IsMouseButtonReleased(cguiMouseButton)) result = true;
+    }
+    else button->__timer = CguiClamp(button->__timer - TRANSITION_SPEED * GetFrameTime(), 0.0f, 1.0f);
     return result;
 }
 
@@ -1097,49 +943,59 @@ void CguiDrawButton(CguiButton *button)
     CguiDrawText(button->text, button->bounds);
 }
 
-// Update Cgui drop down button, returns clicked entry
-int CguiUpdateDropDownButton(CguiDropDownButton *ddButton)
+// Update Cgui drop down button, returns true when selected entry changes
+bool CguiUpdateDropDownButton(CguiDropDownButton *ddButton)
 {
     // Prevent function usage if resources are not loaded
-    if (!cguiLoaded) return -3;
+    if (!cguiLoaded) return false;
 
-    // Update internal button
+    // Update main button
     if (CguiUpdateButton(&ddButton->button)) ddButton->__dropdownActive = !ddButton->__dropdownActive;
+
+    // Set global config if the drop down is active
+    if (ddButton->__dropdownActive) cguiGlobalConfig[CGUI_CONFIG_DROPDOWN_ACTIVE] = ddButton->__dropdownActive;
 
     // Update opening timer transition
     ddButton->__dropDownHeigh = CguiClamp(ddButton->__dropDownHeigh + TRANSITION_SPEED * GetFrameTime() * (ddButton->__dropdownActive ? 1.0f : -1.0f), 0.0f, 1.0f);
 
     // Local Variables
     int listSize = GetListSize(ddButton->entries);
-    int resultEntry = -1;
-    Rectangle dropDownBounds = (Rectangle){ ddButton->button.bounds.x, ddButton->button.bounds.y + ddButton->button.bounds.height, ddButton->button.bounds.width, ddButton->button.bounds.height * listSize * ddButton->__dropDownHeigh };
-    CguiButton *button;
+    int previousSelectedEntry = ddButton->selectedEntry;
+    Rectangle dropDownBounds = CGUI_CLITERAL(Rectangle){ ddButton->button.bounds.x, ddButton->button.bounds.y + ddButton->button.bounds.height, ddButton->button.bounds.width, ddButton->button.bounds.height * listSize * ddButton->__dropDownHeigh };
+    CguiButton *entryButton;
 
     // Select option when scrolled on Cgui
-    if (CheckCollisionPointRec(GetMousePosition(), ddButton->button.bounds) || CheckCollisionPointRec(GetMousePosition(), dropDownBounds)) ddButton->selectedEntry -= GetMouseWheelMove();
+    if (CheckCollisionPointRec(GetMousePosition(), ddButton->button.bounds) || CheckCollisionPointRec(GetMousePosition(), dropDownBounds))
+    {
+        cguiGlobalConfig[CGUI_CONFIG_MOUSE_ACTIVE] = true;
+        ddButton->selectedEntry -= GetMouseWheelMove();
+    }
 
     // Limit seleced entry count
     ddButton->selectedEntry = CguiClamp(ddButton->selectedEntry, 0, listSize - 1);
 
-    // Update drop down buttons
+    // Update entry buttons
     //------------------------------------------------------------------------------
     for (int i = 0; i < listSize; i++)
     {
-        // Get and re-position the drop down button component
-        button = (CguiButton *)GetElement(i, ddButton->entries)->data;
-        button->bounds = (Rectangle){ ddButton->button.bounds.x + cguiBoundarySize, ddButton->button.bounds.y + ddButton->button.bounds.height * (i + 1) + cguiBoundarySize, ddButton->button.bounds.width - cguiBoundarySize * 2.0f, ddButton->button.bounds.height - cguiBoundarySize * 2.0f };
+        // Get and re-position the entry button component
+        entryButton = (CguiButton *)GetElement(i, ddButton->entries)->data;
+        entryButton->bounds = (Rectangle){ ddButton->button.bounds.x + cguiBoundarySize, ddButton->button.bounds.y + ddButton->button.bounds.height * (i + 1) + cguiBoundarySize, ddButton->button.bounds.width - cguiBoundarySize * 2.0f, ddButton->button.bounds.height - cguiBoundarySize * 2.0f };
 
-        // Close drop down when drop down button is clicked and only when the mouse is on drop down area
-        if (CguiUpdateButton(button) && CheckCollisionPointRec(GetMousePosition(), dropDownBounds))
+        // Close drop down when entry button is clicked and only when the mouse is on drop down area
+        if (CguiUpdateButton(entryButton) && CheckCollisionPointRec(GetMousePosition(), dropDownBounds))
         {
             ddButton->selectedEntry = i;
             ddButton->__dropdownActive = false;
-            resultEntry = i;
         }
+
+        // Prevent shadows for entry buttons
+        entryButton->__timer = 0.0f;
     }
     //------------------------------------------------------------------------------
-    if (ddButton->__dropDownHeigh) return -2;
-    return resultEntry;
+
+    if (ddButton->selectedEntry != previousSelectedEntry) return true;
+    return false;
 }
 
 // Draw Cgui drop down button
@@ -1150,32 +1006,23 @@ void CguiDrawDropDownButton(CguiDropDownButton *ddButton)
 
     // Shadow color alpha depends on timer
     int listSize = GetListSize(ddButton->entries);
-    Color shadowColor = { cguiColors[CGUI_COLOR_SHADOW].r, cguiColors[CGUI_COLOR_SHADOW].g, cguiColors[CGUI_COLOR_SHADOW].b, cguiColors[CGUI_COLOR_SHADOW].a * ddButton->button.__timer };
     Rectangle dropDownBounds = { ddButton->button.bounds.x, ddButton->button.bounds.y + ddButton->button.bounds.height, ddButton->button.bounds.width, ddButton->button.bounds.height * listSize * ddButton->__dropDownHeigh };
-    Color shadowShaderColor = cguiColors[CGUI_COLOR_SHADOW];
     Color backgroundColor = cguiColors[CGUI_COLOR_BACKGROUND];
+    Color shadowColor = cguiColors[CGUI_COLOR_SHADOW];
     Element *element = GetElement(ddButton->selectedEntry, ddButton->entries);
-
-    // Limit seleced entry count
-    ddButton->selectedEntry = CguiClamp(ddButton->selectedEntry, 0, listSize - 1);
-
-    // Draw Button
-    if (element && listSize != 0) ddButton->button.text = (*(CguiButton *)element->data).text;
-    else ddButton->button.text = "";
-    CguiDrawButton(&ddButton->button);
 
     // Main drop down background
     if (ddButton->__dropDownHeigh > 0.0f) CguiDrawRectangle(dropDownBounds, cguiColors[CGUI_COLOR_BACKGROUND], cguiColors[CGUI_COLOR_SHADOW]);
 
     // No shadows on drop down button
-    cguiColors[CGUI_COLOR_SHADOW] = (Color){ 0.0f, 0.0f, 0.0f, 0.0f };
+    cguiColors[CGUI_COLOR_SHADOW] = CGUI_CLITERAL(Color){ 0.0f, 0.0f, 0.0f, 0.0f };
 
     // Limit cgui draws only on drop down background
     BeginScissorMode(dropDownBounds.x, dropDownBounds.y, dropDownBounds.width, dropDownBounds.height);
         // Draw drop down buttons by reusing CguiDrawButton
         for (int i = 0; i < listSize; i++)
         {
-            // Change background color for selected item
+            // Change background color temporarily for selected item
             if (i == ddButton->selectedEntry) cguiColors[CGUI_COLOR_BACKGROUND] = CguiGetStateColor(CGUI_STATE_FOCUSED);
 
             CguiDrawButton((CguiButton *)GetElement(i, ddButton->entries)->data);
@@ -1183,8 +1030,8 @@ void CguiDrawDropDownButton(CguiDropDownButton *ddButton)
         }
     EndScissorMode();
 
-    // Reset the default shadow color
-    cguiColors[CGUI_COLOR_SHADOW] = shadowShaderColor;
+    // Reset the shadow color
+    cguiColors[CGUI_COLOR_SHADOW] = shadowColor;
 }
 
 // Cgui update repeat button, returns true when held
@@ -1197,53 +1044,63 @@ bool CguiUpdateRepeatButton(CguiRepeatButton *button)
     bool result = false;
 
     // Update state, do not update state if Global state is not set
-    if (button->__state != CGUI_STATE_DISABLED && cguiGlobalState == 0)
+    if (button->__state == CGUI_STATE_DISABLED || cguiGlobalConfig[CGUI_CONFIG_STATE] != 0)
     {
-        button->__state = CGUI_STATE_NORMAL;
-
-        // Mouse is on top of button
-        if (CheckCollisionPointRec(GetMousePosition(), button->bounds))
-        {
-            // Update the timer for shadow transition
-            button->__timer = CguiClamp(button->__timer + TRANSITION_SPEED * GetFrameTime(), 0.0f, 1.0f);
-
-            button->__state = CGUI_STATE_FOCUSED;
-            if (IsMouseButtonDown(cguiMouseButton))
-            {
-                button->__state = CGUI_STATE_PRESSED;
-                button->__repeatTimer = CguiClamp(button->__repeatTimer + REPEAT_SPEED * GetFrameTime() * 2.0f, 0.0f, 1.0f);
-            }
-            if (IsMouseButtonPressed(cguiMouseButton)) result = true;
-        }
-        else button->__timer = CguiClamp(button->__timer - TRANSITION_SPEED * GetFrameTime(), 0.0f, 1.0f);
-
-        // If mouse button is not pressed, reset the timer
-        if (!IsMouseButtonDown(cguiMouseButton)) button->__repeatTimer = 0.0f;
-
-        // Set the result as condition of repeat timer
-        if (!result) result = (button->__repeatTimer == 1.0f);
+        button->__state = cguiGlobalConfig[CGUI_CONFIG_STATE] - 1;
+        return false;
     }
-    else button->__state = cguiGlobalState - 1;
+
+    button->__state = CGUI_STATE_NORMAL;
+
+    // Mouse is on top of button
+    if (CheckCollisionPointRec(GetMousePosition(), button->bounds))
+    {
+        // Update the timer for shadow transition
+        button->__timer = CguiClamp(button->__timer + TRANSITION_SPEED * GetFrameTime(), 0.0f, 1.0f);
+
+        cguiGlobalConfig[CGUI_CONFIG_MOUSE_ACTIVE] = true;
+        button->__state = CGUI_STATE_FOCUSED;
+
+        if (IsMouseButtonDown(cguiMouseButton))
+        {
+            button->__state = CGUI_STATE_PRESSED;
+            button->__repeatTimer = CguiClamp(button->__repeatTimer + REPEAT_SPEED * GetFrameTime() * 2.0f, 0.0f, 1.0f);
+        }
+
+        if (IsMouseButtonPressed(cguiMouseButton)) result = true;
+    }
+    else button->__timer = CguiClamp(button->__timer - TRANSITION_SPEED * GetFrameTime(), 0.0f, 1.0f);
+
+    // If mouse button is not pressed, reset the timer
+    if (!IsMouseButtonDown(cguiMouseButton)) button->__repeatTimer = 0.0f;
+
+    // Set the result as condition of repeat timer
+    if (!result) result = (button->__repeatTimer == 1.0f);
+
     return result;
 }
 
 // Draw Cgui repeat button
 void CguiDrawRepeatButton(CguiRepeatButton *button)
 {
-    CguiButton cguiButton = { button->bounds, button->text, button->__state, button->__timer };
-    CguiDrawButton(&cguiButton);
+    CguiButton internalButton = { button->bounds, button->text, button->__state, button->__timer };
+    CguiDrawButton(&internalButton);
 }
 
 // Cgui update hyper link button, returns true when clicked and opens url
 bool CguiUpdateHyperLinkButton(CguiHyperLinkButton *button)
 {
-    CguiButton cguiButton = { button->bounds, button->text, button->__state, button->__timer };
-    
-    // Use existing function
-    int result = CguiUpdateButton(&cguiButton);
+    CguiButton internalButton = { 0 };
+    internalButton.bounds = button->bounds;
+    internalButton.text = button->text;
+    internalButton.__state = button->__state;
+    internalButton.__timer = button->__timer;
 
-    button->__state = cguiButton.__state;
-    button->__timer = cguiButton.__timer;
+    // Use existing function
+    int result = CguiUpdateButton(&internalButton);
+
+    button->__state = internalButton.__state;
+    button->__timer = internalButton.__timer;
 
     // Open url from button
     if (result) OpenURL(button->url);
@@ -1254,7 +1111,11 @@ bool CguiUpdateHyperLinkButton(CguiHyperLinkButton *button)
 // Draw Cgui hyper link button
 void CguiDrawHyperLinkButton(CguiHyperLinkButton *button)
 {
-    CguiButton cguiButton = { button->bounds, button->text, button->__state, button->__timer };
+    CguiButton internalButton = { 0 };
+    internalButton.bounds = button->bounds;
+    internalButton.text = button->text;
+    internalButton.__state = button->__state;
+    internalButton.__timer = button->__timer;
 
     Color foregroundColor = cguiColors[CGUI_COLOR_FOREGROUND];
 
@@ -1262,10 +1123,127 @@ void CguiDrawHyperLinkButton(CguiHyperLinkButton *button)
     cguiColors[CGUI_COLOR_FOREGROUND] = cguiColors[CGUI_COLOR_ACTIVE];
 
     // Use existing function
-    CguiDrawButton(&cguiButton);
+    CguiDrawButton(&internalButton);
 
     // Reset color back
     cguiColors[CGUI_COLOR_FOREGROUND] = foregroundColor;
+}
+
+// Cgui update button, returns true when clicked
+CGAPI bool CguiUpdateActiveButton(CguiActiveButton *button)
+{
+    CguiButton internalButton = { 0 };
+    internalButton.bounds = button->bounds;
+    internalButton.text = button->text;
+    internalButton.__state = button->__state;
+    internalButton.__timer = button->__timer;
+
+    // Use existing function
+    int result = CguiUpdateButton(&internalButton);
+
+    button->__state = internalButton.__state;
+    button->__timer = internalButton.__timer;
+
+    return result;
+}
+
+// Draw Cgui button
+CGAPI void CguiDrawActiveButton(CguiActiveButton *button)
+{
+    CguiButton internalButton = { 0 };
+    internalButton.bounds = button->bounds;
+    internalButton.text = button->text;
+    internalButton.__state = button->__state;
+    internalButton.__timer = button->__timer;
+
+    Color backgroundColor = cguiColors[CGUI_COLOR_BACKGROUND];
+
+    // temporarily make background color as active
+    cguiColors[CGUI_COLOR_BACKGROUND] = cguiColors[CGUI_COLOR_ACTIVE];
+
+    // Use existing function
+    CguiDrawButton(&internalButton);
+
+    // Reset color back
+    cguiColors[CGUI_COLOR_BACKGROUND] = backgroundColor;
+}
+
+// Cgui update button, returns true when clicked
+CGAPI bool CguiUpdateUnknownButton(CguiUnknownButton *button)
+{
+    CguiButton internalButton = { 0 };
+    internalButton.bounds = button->bounds;
+    internalButton.text = button->text;
+    internalButton.__state = button->__state;
+    internalButton.__timer = button->__timer;
+
+    // Use existing function
+    int result = CguiUpdateButton(&internalButton);
+
+    button->__state = internalButton.__state;
+    button->__timer = internalButton.__timer;
+
+    return result;
+}
+
+// Draw Cgui button
+CGAPI void CguiDrawUnknownButton(CguiUnknownButton *button)
+{
+    CguiButton internalButton = { 0 };
+    internalButton.bounds = button->bounds;
+    internalButton.text = button->text;
+    internalButton.__state = button->__state;
+    internalButton.__timer = button->__timer;
+
+    Color backgroundColor = cguiColors[CGUI_COLOR_BACKGROUND];
+
+    // temporarily make background color as unknown
+    cguiColors[CGUI_COLOR_BACKGROUND] = cguiColors[CGUI_COLOR_UNKNOWN];
+
+    // Use existing function
+    CguiDrawButton(&internalButton);
+
+    // Reset color back
+    cguiColors[CGUI_COLOR_BACKGROUND] = backgroundColor;
+}
+
+// Cgui update button, returns true when clicked
+CGAPI bool CguiUpdateDangerButton(CguiDangerButton *button)
+{
+    CguiButton internalButton = { 0 };
+    internalButton.bounds = button->bounds;
+    internalButton.text = button->text;
+    internalButton.__state = button->__state;
+    internalButton.__timer = button->__timer;
+
+    // Use existing function
+    int result = CguiUpdateButton(&internalButton);
+
+    button->__state = internalButton.__state;
+    button->__timer = internalButton.__timer;
+
+    return result;
+}
+
+// Draw Cgui button
+CGAPI void CguiDrawDangerButton(CguiDangerButton *button)
+{
+    CguiButton internalButton = { 0 };
+    internalButton.bounds = button->bounds;
+    internalButton.text = button->text;
+    internalButton.__state = button->__state;
+    internalButton.__timer = button->__timer;
+
+    Color backgroundColor = cguiColors[CGUI_COLOR_BACKGROUND];
+
+    // temporarily make background color as danger
+    cguiColors[CGUI_COLOR_BACKGROUND] = cguiColors[CGUI_COLOR_DANGER];
+
+    // Use existing function
+    CguiDrawButton(&internalButton);
+
+    // Reset color back
+    cguiColors[CGUI_COLOR_BACKGROUND] = backgroundColor;
 }
 
 //----------------------------------------------------------------------------------
@@ -1275,25 +1253,22 @@ void CguiDrawHyperLinkButton(CguiHyperLinkButton *button)
 // Create button for easier initialization
 CguiButton CguiCreateButton(Rectangle bounds, const char *text)
 {
-    CguiButton button = { bounds, text };
-    button.__state = 0;
-    button.__timer = 0.0f;
+    CguiButton button = { 0 };
+    button.bounds = bounds;
+    button.text = text;
     return button;
 }
 
 // Delete created button
-void CguiDeleteButton(CguiButton *cguiButton)
+void CguiDeleteButton(CguiButton *button)
 {
-    cguiButton->bounds = (Rectangle){ 0.0f, 0.0f, 0.0f, 0.0f };
-    cguiButton->text = NULL;
-    cguiButton->__state = 0;
-    cguiButton->__timer = 0.0f;
+    // Nothing to be done (may change)
 }
 
 // Create drop down button for easier initialization
-CguiDropDownButton CguiCreateDropDownButton(Rectangle bounds, const char *texts[], int textCount, int defaultSelected)
+CguiDropDownButton CguiCreateDropDownButton(Rectangle bounds, const char *texts[], int textCount)
 {
-    CguiDropDownButton cguiDropDownButton;
+    CguiDropDownButton cguiDropDownButton = { 0 };
     CguiButton cguiButton = CguiCreateButton(bounds, "");
     List *entries = CreateList(sizeof(CguiButton));
     for (int i = 0; i < textCount; i++)
@@ -1301,28 +1276,23 @@ CguiDropDownButton CguiCreateDropDownButton(Rectangle bounds, const char *texts[
 
     cguiDropDownButton.entries = entries;
     cguiDropDownButton.button = cguiButton;
-    cguiDropDownButton.selectedEntry = defaultSelected;
-    cguiDropDownButton.__dropdownActive = false;
-    cguiDropDownButton.__dropDownHeigh = 0.0f;
     return cguiDropDownButton;
 }
 
 // Delete created drop down button
-void CguiDeleteDropDownButton(CguiDropDownButton *cguiDropDownButton)
+void CguiDeleteDropDownButton(CguiDropDownButton *button)
 {
     // The list is automatically cleared
-    DeleteList(cguiDropDownButton->entries);
-    cguiDropDownButton->entries = NULL;
-    CguiDeleteButton(&cguiDropDownButton->button);
-    cguiDropDownButton->selectedEntry = 0;
-    cguiDropDownButton->__dropdownActive = false;
-    cguiDropDownButton->__dropDownHeigh = 0.0f;
+    DeleteList(button->entries);
+    CguiDeleteButton(&button->button);
 }
 
 // Create repeat button for easier initialization
 CguiRepeatButton CguiCreateRepeatButton(Rectangle bounds, const char *text)
 {
-    CguiRepeatButton button = { bounds, text };
+    CguiRepeatButton button = { 0 };
+    button.bounds = bounds;
+    button.text = text;
     button.__state = 0;
     button.__timer = 0.0f;
     button.__repeatTimer = 0.0f;
@@ -1330,32 +1300,63 @@ CguiRepeatButton CguiCreateRepeatButton(Rectangle bounds, const char *text)
 }
 
 // Delete created repeat button
-void CguiDeleteRepeatButton(CguiRepeatButton *cguiRepeatButton)
+void CguiDeleteRepeatButton(CguiRepeatButton *button)
 {
-    cguiRepeatButton->bounds = (Rectangle){ 0.0f, 0.0f, 0.0f, 0.0f };
-    cguiRepeatButton->text = NULL;
-    cguiRepeatButton->__state = 0;
-    cguiRepeatButton->__timer = 0.0f;
-    cguiRepeatButton->__repeatTimer = 0.0f;
+    // Nothing to be done (may change)
 }
 
 // Create hyper link button for easier initialization
 CguiHyperLinkButton CguiCreateHyperLinkButton(Rectangle bounds, const char *text, const char *url)
 {
-    CguiHyperLinkButton button = { bounds, text, url };
+    CguiHyperLinkButton button = { 0 };
+    button.bounds = bounds;
+    button.text = text;
+    button.url = url;
     button.__state = 0;
     button.__timer = 0.0f;
     return button;
 }
 
 // Delete created hyper link button
-void CguiDeleteHyperLinkButton(CguiHyperLinkButton *cguiHyperLinkButton)
+void CguiDeleteHyperLinkButton(CguiHyperLinkButton *button)
 {
-    cguiHyperLinkButton->bounds = (Rectangle){ 0.0f, 0.0f, 0.0f, 0.0f };
-    cguiHyperLinkButton->text = NULL;
-    cguiHyperLinkButton->url = NULL;
-    cguiHyperLinkButton->__state = 0;
-    cguiHyperLinkButton->__timer = 0.0f;
+    // Nothing to be done (may change)
+}
+
+// Create button for easier initialization
+CGAPI CguiActiveButton CguiCreateActiveButton(Rectangle bounds, const char *text)
+{
+    return (CguiActiveButton)CguiCreateButton(bounds, text);
+}
+
+// Delete created button
+CGAPI void CguiDeleteActiveButton(CguiActiveButton *button)
+{
+    CguiDeleteButton((CguiButton *)button);
+}
+
+// Create button for easier initialization
+CGAPI CguiUnknownButton CguiCreateUnknownButton(Rectangle bounds, const char *text)
+{
+    return (CguiUnknownButton)CguiCreateButton(bounds, text);
+}
+
+// Delete created button
+CGAPI void CguiDeleteUnknownButton(CguiUnknownButton *button)
+{
+    CguiDeleteButton((CguiButton *)button);
+}
+
+// Create button for easier initialization
+CGAPI CguiDangerButton CguiCreateDangerButton(Rectangle bounds, const char *text)
+{
+    return (CguiDangerButton)CguiCreateButton(bounds, text);
+}
+
+// Delete created button
+CGAPI void CguiDeleteDangerButton(CguiDangerButton *button)
+{
+    CguiDeleteButton((CguiButton *)button);
 }
 
 //----------------------------------------------------------------------------------
@@ -1368,9 +1369,9 @@ void CguiSetDarkTheme(void)
     cguiFontProperty.shadowColor = CGUI_CLITERAL(Color){ 0, 0, 0, 255 };
     cguiColors[CGUI_COLOR_BACKGROUND] = CGUI_CLITERAL(Color){ 51, 51, 51, 192 };
     cguiColors[CGUI_COLOR_FOREGROUND] = CGUI_CLITERAL(Color){ 255, 255, 255, 255 };
-    cguiColors[CGUI_COLOR_ACTIVE] = CGUI_CLITERAL(Color){ 0, 170, 255, 255 };
-    cguiColors[CGUI_COLOR_UNKNOWN] = CGUI_CLITERAL(Color){ 255, 255, 0, 255 };
-    cguiColors[CGUI_COLOR_DANGER] = CGUI_CLITERAL(Color){ 255, 0, 0, 255 };
+    cguiColors[CGUI_COLOR_ACTIVE] = CGUI_CLITERAL(Color){ 70, 176, 230, 255 };
+    cguiColors[CGUI_COLOR_UNKNOWN] = CGUI_CLITERAL(Color){ 238, 183, 73, 255 };
+    cguiColors[CGUI_COLOR_DANGER] = CGUI_CLITERAL(Color){ 230, 0, 0, 255 };
     cguiColors[CGUI_COLOR_DISABLED] = CGUI_CLITERAL(Color){ 127, 127, 127, 255 };
     cguiColors[CGUI_COLOR_SHADOW] = CGUI_CLITERAL(Color){ 0, 0, 0, 127 };
     cguiFocusedFade = CGUI_CLITERAL(Vector3){ 0.0f, 0.0f, 0.05f };
@@ -1383,9 +1384,9 @@ void CguiSetLightTheme(void)
     cguiFontProperty.shadowColor = CGUI_CLITERAL(Color){ 0, 0, 0, 127 };
     cguiColors[CGUI_COLOR_BACKGROUND] = CGUI_CLITERAL(Color){ 255, 255, 255, 192 };
     cguiColors[CGUI_COLOR_FOREGROUND] = CGUI_CLITERAL(Color){ 51, 51, 51, 255 };
-    cguiColors[CGUI_COLOR_ACTIVE] = CGUI_CLITERAL(Color){ 0, 170, 255, 255 };
-    cguiColors[CGUI_COLOR_UNKNOWN] = CGUI_CLITERAL(Color){ 255, 255, 0, 255 };
-    cguiColors[CGUI_COLOR_DANGER] = CGUI_CLITERAL(Color){ 255, 0, 0, 255 };
+    cguiColors[CGUI_COLOR_ACTIVE] = CGUI_CLITERAL(Color){ 70, 176, 230, 255 };
+    cguiColors[CGUI_COLOR_UNKNOWN] = CGUI_CLITERAL(Color){ 238, 183, 73, 255 };
+    cguiColors[CGUI_COLOR_DANGER] = CGUI_CLITERAL(Color){ 230, 0, 0, 255 };
     cguiColors[CGUI_COLOR_DISABLED] = CGUI_CLITERAL(Color){ 127, 127, 127, 255 };
     cguiColors[CGUI_COLOR_SHADOW] = CGUI_CLITERAL(Color){ 51, 51, 51, 127 };
     cguiFocusedFade = CGUI_CLITERAL(Vector3){ 0.0f, 0.0f, -0.1f };
@@ -1446,15 +1447,27 @@ float CguiGetBoundarySize(void)
     return cguiBoundarySize;
 }
 
+void CguiSetConfig(int configId, int config)
+{
+    if (configId < 0 || configId >= CGUI_CONFIG_MAX) return;
+    cguiGlobalConfig[configId] = config;
+}
+
+int CguiGetConfig(int configId)
+{
+    if (configId < 0 || configId >= CGUI_CONFIG_MAX) return 0;
+    return cguiGlobalConfig[configId];
+}
+
 void CguiSetColor(int colorId, Color color)
 {
-    if (colorId < 0 || colorId >= CGUI_COLOR_ALL) return;
+    if (colorId < 0 || colorId >= CGUI_COLOR_MAX) return;
     cguiColors[colorId] = color;
 }
 
 Color CguiGetColor(int colorId)
 {
-    if (colorId < 0 || colorId >= CGUI_COLOR_ALL) return (Color){ 0, 0, 0, 0 };
+    if (colorId < 0 || colorId >= CGUI_COLOR_MAX) return (Color){ 0, 0, 0, 0 };
     return cguiColors[colorId];
 }
 
@@ -1561,6 +1574,173 @@ void CguiSetShadowOffset(Vector2 offset)
 Vector2 CguiGetShadowOffset(void)
 {
     return CGUI_CLITERAL(Vector2){ cguiShadowOffset[0], cguiShadowOffset[1] };
+}
+
+/************************************************************************************
+*
+*   LINKED LIST IMPLEMENTATION
+*
+************************************************************************************/
+
+// Create a new Linked List, returns NULL if failed
+List *CreateList(int typesize)
+{
+    List *list = (List *) RL_MALLOC(sizeof(List));
+    if (!list) return NULL;
+
+    list->size = 0;
+    list->typesize = typesize;
+    list->base = (Element *) RL_MALLOC(sizeof(Element));
+
+    if (!list->base) return NULL;
+
+    list->base->data = NULL;
+    list->base->next = NULL;
+    return list;
+}
+
+// Get element from the index, returns NULL if invalid index or failed
+Element *GetElement(int index, List *list)
+{
+    Element *element = NULL;
+    if (!list) return NULL;
+    element = list->base;
+
+    // Note, I am not using 'i <= index' because I want
+    // the size to overflow in case the index was -1
+    for (int i = 0; i < (index + 1); i++)
+    {
+        element = (Element *) element->next;
+        if (!element) return NULL;
+    }
+    return element;
+}
+
+// Update the size of a linked list internally, returns non-zero if failed
+int UpdateListSize(List *list)
+{
+    Element *element = NULL;
+    int size = 0;
+
+    if (!list) return 1;
+    element = list->base;
+
+    while (element)
+    {
+        element = (Element *) element->next;
+        size++;
+    }
+
+    // The base is not considered as an element
+    --size;
+    return 0;
+}
+
+// Get the size of a linked list, returns 0 when no elements are available or when failed
+int GetListSize(List *list)
+{
+    if (!list) return 0;
+    if (UpdateListSize(list)) return 0;
+    return list->size;
+}
+
+// Create an element, returns NULL if failed. These functions are not supposed to be used externally
+Element *CreateElemet(int typesize)
+{
+    Element *element = (Element *) RL_MALLOC(sizeof(Element));
+    if (!element) return NULL;
+
+    element->next = NULL;
+    element->data = RL_MALLOC(typesize);
+    if (!element->data) return NULL;
+
+    return element;
+}
+
+// Delete an element, returns non-zero if failed. These functions are not supposed to be used externally
+int DeleteElement(Element *element)
+{
+    if (!element) return 1;
+    if (!element->data) return 2;
+
+    RL_FREE(element->data);
+    RL_FREE(element);
+    return 0;
+}
+
+// Add element to a linked list. You can add element at the end of a linked list by giving it the size of a linked list
+Element *AddElement(int index, List *list)
+{
+    Element *newElement = NULL;
+    Element *prev = NULL;
+    Element *temp = NULL;
+
+    if (!list) { return NULL; }
+    if (index > list->size) { return NULL; }
+
+    prev = GetElement(index - 1, list);
+    newElement = CreateElemet(list->typesize);
+
+    if (!newElement) { return NULL; }
+    // There can't be no previous because the base should exist
+    if (!prev) { return NULL; }
+
+    temp = (Element *) prev->next;
+    prev->next = (void *) newElement;
+    newElement->next = (void *) temp;
+
+    list->size++;
+    return newElement;
+}
+
+// Remove element from the index, returns non-zero if invalid index or failed
+int RemoveElement(int index, List *list)
+{
+    Element *element = NULL;
+    Element *prev = NULL;
+    Element *next = NULL;
+
+    if (!list) { return 1; }
+    if (index >= list->size) { return 3; }
+
+    element = GetElement(index, list);
+    if (!element) { return 4; }
+
+    prev = GetElement(index - 1, list);
+
+    // To prevent unnecessary error logs, I used an 'if' check
+    if (index < list->size - 1) { next = GetElement(index + 1, list); }
+    if (!prev) { return 5; }
+
+    prev->next = NULL;
+    if (next) { prev->next = next; }
+
+    if (DeleteElement(element)) { return 6; }
+
+    list->size--;
+    return 0;
+}
+
+// Remove all the elements from a linked list, returns non-zero if faied
+int ClearList(List *list)
+{
+    if (!list) { return 1; }
+    if (list->size == 0) { return 0; }
+
+    for (int i = list->size - 1; i >= 0; i--)
+        RemoveElement(i, list);
+    return 0;
+}
+
+// Delete a Linked List, returns non-zero if faied
+int DeleteList(List *list)
+{
+    if (!list) { return 1; }
+    if (ClearList(list)) { return 2; }
+    if (!list->base) { return 3; }
+    RL_FREE(list->base);
+    RL_FREE(list);
+    return 0;
 }
 
 #endif // CGUI_IMPLEMENTATION
