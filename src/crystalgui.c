@@ -33,15 +33,39 @@ Color ApplyHSVOnColor(Color color, Vector3 hsv)
     colorHSV.y += hsv.y;
     colorHSV.z += hsv.z;
 
-    if (colorHSV.y > 1.0f) { colorHSV.z -= colorHSV.y - 1.0f; colorHSV.y = 1.0f; }
-    if (colorHSV.z > 1.0f) { colorHSV.y -= colorHSV.z - 1.0f; colorHSV.z = 1.0f; }
+    if (colorHSV.y > 1.0f)
+    {
+        colorHSV.z -= colorHSV.y - 1.0f;
+        colorHSV.y = 1.0f;
+    }
+    if (colorHSV.z > 1.0f)
+    {
+        colorHSV.y -= colorHSV.z - 1.0f;
+        colorHSV.z = 1.0f;
+    }
 
-    if (colorHSV.y < 0.0f) { colorHSV.z += colorHSV.y + 1.0f; colorHSV.y = 0.0f; }
-    if (colorHSV.z < 0.0f) { colorHSV.y += colorHSV.z + 1.0f; colorHSV.z = 0.0f; }
+    if (colorHSV.y < 0.0f)
+    {
+        colorHSV.z += colorHSV.y + 1.0f;
+        colorHSV.y = 0.0f;
+    }
+    if (colorHSV.z < 0.0f)
+    {
+        colorHSV.y += colorHSV.z + 1.0f;
+        colorHSV.z = 0.0f;
+    }
 
     Color finalColor = ColorFromHSV(colorHSV.x, colorHSV.y, colorHSV.z);
     finalColor.a = color.a;
     return finalColor;
+}
+
+// Clamp the floating point value between minimum and maximum
+float FloatClamp(float value, float minimum, float maximum)
+{
+    if (value < minimum) value = minimum;
+    if (value > maximum) value = maximum;
+    return value;
 }
 
 // Load default shaders
@@ -187,7 +211,10 @@ void CguiSetDefaultFontProperties(CguiInstance *instance)
     instance->textProperties.font = LoadFontEx(CRYSTALGUI_RESOURCE_PATH "Roboto-Regular.ttf", instance->textProperties.size, NULL, 0);
 
     instance->textProperties.shadowBlurRadius = 2.0f;
-    instance->textProperties.shadowOffset = (Vector2){ 0.0f, -2.0f };
+    instance->textProperties.shadowOffset = (Vector2)
+    {
+        0.0f, -2.0f
+    };
 }
 
 // Set the default theme colors
@@ -195,18 +222,48 @@ void CguiSetDefaultThemeColors(CguiInstance *instance)
 {
     if (!instance) return;
 
-    instance->themeColors.accent = (Color){ 0, 170, 255, 255 };
-    instance->themeColors.normal = (Color){ 0, 0, 0, 255 };
-    instance->themeColors.disabled = (Color){ 127, 127, 127, 255 };
-    instance->themeColors.warning = (Color){ 127, 127, 0, 255 };
-    instance->themeColors.alert = (Color){ 127, 64, 0, 255 };
-    instance->themeColors.danger = (Color){ 127, 0, 0, 255 };
+    instance->themeColors.accent = (Color)
+    {
+        0, 170, 255, 255
+    };
+    instance->themeColors.regular = (Color)
+    {
+        0, 0, 0, 255
+    };
+    instance->themeColors.disabled = (Color)
+    {
+        127, 127, 127, 255
+    };
+    instance->themeColors.warning = (Color)
+    {
+        255, 255, 0, 255
+    };
+    instance->themeColors.alert = (Color)
+    {
+        255, 127, 0, 255
+    };
+    instance->themeColors.destructive = (Color)
+    {
+        255, 0, 0, 255
+    };
 
-    instance->themeColors.focused = (Vector3){ 0, 0, 0.062666 };
-    instance->themeColors.pressed = (Vector3){ 0, 0, 0.125222 };
+    instance->themeColors.focused = (Vector3)
+    {
+        0, 0, 0.062666
+    };
+    instance->themeColors.pressed = (Vector3)
+    {
+        0, 0, 0.125222
+    };
 
-    instance->themeColors.shadowColor = (Color){ 0, 0, 0, 64 };
-    instance->textProperties.color = (Color){ 255, 255, 255, 255 };
+    instance->themeColors.shadowColor = (Color)
+    {
+        0, 0, 0, 127
+    };
+    instance->textProperties.color = (Color)
+    {
+        255, 255, 255, 255
+    };
 }
 
 // Create a new instance of Crystal GUI
@@ -233,6 +290,7 @@ CguiInstance *CguiCreateInstance(void)
     CguiSetDefaultThemeColors(instance);
 
     instance->focusTimerSpeed = 10.0f;
+    instance->animationTimerSpeed = 10.0f;
     instance->colorTransparency = 0.5f;
 
     return instance;
@@ -286,6 +344,97 @@ void CguiBlurRenderTexture(CguiInstance *instance)
     EndTextureMode();
 }
 
+// Create basic component with no features.
+CguiComponentBasic *CguiCreateComponentBasic(CguiInstance *instance, int placement, Rectangle minimumBounds)
+{
+    if (!instance) return NULL;
+
+    CguiComponentBasic *component = (CguiComponentBasic *)malloc(sizeof(CguiComponentBasic));
+    component->placement = placement;
+    component->minimumBounds = minimumBounds;
+    component->update = CguiUpdateComponentBasic;
+    component->draw = CguiDrawComponentBasic;
+    return component;
+}
+
+// Delete the created basic component.
+void CguiDeleteComponentBasic(CguiInstance *instance, CguiComponentBasic *component)
+{
+    if (!instance || !component) return;
+    free(component);
+}
+
+// Update the created basic component.
+void CguiUpdateComponentBasic(CguiInstance *instance, CguiComponentBasic *component)
+{
+}
+
+// Draw the created basic component.
+void CguiDrawComponentBasic(CguiInstance *instance, CguiComponentBasic *component)
+{
+}
+
+// Create basic component with no features.
+CguiComponentReadonlyText *CguiCreateComponentReadonlyText(CguiInstance *instance, int placement, Rectangle minimumBounds, const char *text, bool isRawText)
+{
+    CguiComponentReadonlyText *component = (CguiComponentReadonlyText *)malloc(sizeof(CguiComponentReadonlyText));
+    component->component = CguiCreateComponentBasic(instance, placement, minimumBounds);
+    component->component->update = CguiUpdateComponentReadonlyText;
+    component->component->draw = CguiDrawComponentReadonlyText;
+    component->text = text;
+    component->isRawText = isRawText;
+}
+
+// Delete the created basic component.
+void CguiDeleteComponentReadonlyText(CguiInstance *instance, CguiComponentReadonlyText *component)
+{
+    if (!instance || !component) return;
+    CguiDeleteComponentBasic(instance, component->component);
+    free(component);
+}
+
+// Update the created basic component.
+void CguiUpdateComponentReadonlyText(CguiInstance *instance, CguiComponentReadonlyText *component)
+{
+    if (!instance || !component) return;
+    CguiUpdateComponentBasic(instance, component->component);
+}
+
+// Draw the created basic component.
+void CguiDrawComponentReadonlyText(CguiInstance *instance, CguiComponentReadonlyText *component)
+{
+    if (!instance || !component) return;
+    CguiDrawComponentBasic(instance, component->component);
+}
+
+// Create basic component with no features.
+CguiComponentIconTexture *CguiCreateComponentIconTexture(CguiInstance *instance, int placement, Rectangle minimumBounds)
+{
+
+}
+
+// Delete the created basic component.
+void CguiDeleteComponentIconTexture(CguiInstance *instance, CguiComponentIconTexture *component)
+{
+    if (!instance || !component) return;
+    CguiDeleteComponentBasic(instance, component->component);
+    free(component);
+}
+
+// Update the created basic component.
+void CguiUpdateComponentIconTexture(CguiInstance *instance, CguiComponentIconTexture *component)
+{
+    if (!instance || !component) return;
+    CguiUpdateComponentBasic(instance, component->component);
+}
+
+// Draw the created basic component.
+void CguiDrawComponentIconTexture(CguiInstance *instance, CguiComponentIconTexture *component)
+{
+    if (!instance || !component) return;
+    CguiDrawComponentBasic(instance, component->component);
+}
+
 // Draw a rectangle using default shaders
 void CguiDrawShaderRectangle(CguiInstance *instance, Rectangle rectangle, Color rectangleColor, Color shadowColor)
 {
@@ -321,6 +470,7 @@ void CguiDrawShaderText(CguiInstance *instance, const char *text, Rectangle rect
     position.x -= instance->textProperties.shadowOffset.x;
     position.y -= instance->textProperties.shadowOffset.y;
     BeginTextureMode(instance->textRenderTexture);
+    ClearBackground(BLANK);
     DrawTextEx(instance->textProperties.font, text, position, instance->textProperties.size, instance->textProperties.spacing, instance->textProperties.shadowColor);
     EndTextureMode();
     position.x += instance->textProperties.shadowOffset.x;
@@ -339,85 +489,34 @@ void CguiDrawShaderText(CguiInstance *instance, const char *text, Rectangle rect
     DrawTextEx(instance->textProperties.font, text, position, instance->textProperties.size, instance->textProperties.spacing, instance->textProperties.color);
 }
 
-// Create a new button
-CguiButton *CguiCreateButton(CguiInstance *instance, Rectangle bounds, const char *text, int type)
+// Draw a rectangle with ticking animation
+void CguiDrawShaderCheckbox(CguiInstance *instance, Rectangle rectangle, Color tickedColor, Color untickedColor, Color shadowColor, float tickThickness, float animationTime)
 {
-    if (!instance) return NULL;
+    if (!instance) return;
 
-    CguiButton *button = (CguiButton *)malloc(sizeof(CguiButton));
-    button->bounds = bounds;
-    button->text = text;
-    button->type = type;
-    return button;
-}
+    float firstHalfAnimationTime = FloatClamp(animationTime * 2.0f, 0.0f, 1.0f);
+    float thirdQuaterAnimationTime = FloatClamp(animationTime * 4.0f - 2.0f, 0.0f, 1.0f);
+    float fourthQuaterAnimationTime = FloatClamp(animationTime * 4.0f - 3.0f, 0.0f, 1.0f);
 
-// Delete the created button
-void CguiDeleteButton(CguiInstance *instance, CguiButton *button)
-{
-    if (!instance || !button) return;
-    free(button);
-}
+    Color rectangleColor = { tickedColor.r * firstHalfAnimationTime + untickedColor.r * (1.0f - firstHalfAnimationTime),
+                             tickedColor.g * firstHalfAnimationTime + untickedColor.g * (1.0f - firstHalfAnimationTime),
+                             tickedColor.b * firstHalfAnimationTime + untickedColor.b * (1.0f - firstHalfAnimationTime),
+                             tickedColor.a * firstHalfAnimationTime + untickedColor.a * (1.0f - firstHalfAnimationTime)
+                           };
+    Color tickColor = instance->textProperties.color;
 
-// Update the button, returns true when clicked
-bool CguiUpdateButton(CguiInstance *instance, CguiButton *button)
-{
-    if (!instance || !button) return false;
-    if (button->type == CGUI_BUTTON_TYPE_DISABLED) return false;
+    CguiDrawShaderRectangle(instance, rectangle, rectangleColor, shadowColor);
 
-    bool result = false;
+    float lineThickness = instance->shaderVariables.shaderProperties.roundness * tickThickness;
+    if (lineThickness < 1.0f) lineThickness = 1.0f;
+    Vector2 leftCheckLineStart = { rectangle.x + rectangle.width * 0.296875f, rectangle.y + rectangle.height * 0.509375f };
+    Vector2 leftCheckLineEndOffset = { rectangle.width * 0.1625f * thirdQuaterAnimationTime, rectangle.height * 0.15f * thirdQuaterAnimationTime };
+    Vector2 leftCheckLineEnd = { leftCheckLineStart.x + leftCheckLineEndOffset.x, leftCheckLineStart.y + leftCheckLineEndOffset.y };
 
-    button->__state = CGUI_BUTTON_STATE_NORMAL;
-    if (CheckCollisionPointRec(GetMousePosition(), button->bounds))
-    {
-        button->__state = CGUI_BUTTON_STATE_FOCUSED;
-        button->__focusTimer += instance->focusTimerSpeed * GetFrameTime();
+    Vector2 rightCheckLineStart = leftCheckLineEnd;
+    Vector2 rightCheckLineEndOffset = { rectangle.width * 0.265625f * fourthQuaterAnimationTime, rectangle.height * -0.315625f * fourthQuaterAnimationTime };
+    Vector2 rightCheckLineEnd = { rightCheckLineStart.x + rightCheckLineEndOffset.x, rightCheckLineStart.y + rightCheckLineEndOffset.y };
 
-        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-        {
-            button->__state = CGUI_BUTTON_STATE_PRESSED;
-        }
-        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
-        {
-            result = true;
-        }
-    }
-    else button->__focusTimer -= instance->focusTimerSpeed * GetFrameTime();
-
-    if (button->__focusTimer < 0.0f) button->__focusTimer = 0.0f;
-    if (button->__focusTimer > 1.0f) button->__focusTimer = 1.0f;
-    return result;
-}
-
-// Draw the button using Crystal GUI Base
-void CguiDrawButton(CguiInstance *instance, CguiButton *button)
-{
-    if (!instance || !button) return;
-
-    Color buttonColor = { 0 };
-    Color shadowColor = { 0 };
-
-    switch (button->type)
-    {
-        case CGUI_BUTTON_TYPE_NORMAL: buttonColor = instance->themeColors.normal; break;
-        case CGUI_BUTTON_TYPE_DISABLED: buttonColor = instance->themeColors.disabled; break;
-        case CGUI_BUTTON_TYPE_RECOMMENDED: buttonColor = instance->themeColors.accent; break;
-        case CGUI_BUTTON_TYPE_ALERT: buttonColor = instance->themeColors.alert; break;
-        case CGUI_BUTTON_TYPE_WARNING: buttonColor = instance->themeColors.warning; break;
-        case CGUI_BUTTON_TYPE_DANGEROUS: buttonColor = instance->themeColors.danger; break;
-    }
-
-    switch (button->__state)
-    {
-        case CGUI_BUTTON_STATE_FOCUSED: buttonColor = ApplyHSVOnColor(buttonColor, instance->themeColors.focused); break;
-        case CGUI_BUTTON_STATE_PRESSED: buttonColor = ApplyHSVOnColor(buttonColor, instance->themeColors.pressed); break;
-    }
-
-    buttonColor = ColorAlpha(buttonColor, instance->colorTransparency);
-    shadowColor = (Color){ instance->themeColors.shadowColor.r * button->__focusTimer,
-                           instance->themeColors.shadowColor.g * button->__focusTimer,
-                           instance->themeColors.shadowColor.b * button->__focusTimer,
-                           instance->themeColors.shadowColor.a * button->__focusTimer };
-
-    CguiDrawShaderRectangle(instance, button->bounds, buttonColor, shadowColor);
-    CguiDrawShaderText(instance, button->text, button->bounds);
+    DrawLineEx(leftCheckLineStart, leftCheckLineEnd, lineThickness, tickColor);
+    DrawLineEx(rightCheckLineStart, rightCheckLineEnd, lineThickness, tickColor);
 }
