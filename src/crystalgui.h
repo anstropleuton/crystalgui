@@ -57,23 +57,22 @@
  *   internally casted to `CguiComponentBasic` (without changing any data) and
  *   called the update/draw functions in `CguiComponentBasic`
  *
- *   (recommended) Create a creation function. (example: `CreateMyComponent`)
- *   (recommended) Create a destruction function. (example: `DeleteMyComponent`)
- *   (recommended) Create an update function. (example: `UpdateMyComponent`)
- *   (recommended) Create a drawing function. (example: `DrawMyComponent`)
- *
+ *   Create a creation function. (example: `CreateMyComponent`)
  *   In the creation function, assign `CguiComponentBasic component;` with
  *   the function call for `CguiCreateComponentBasic()`. It will allocate
  *   memory for `CguiComponentBasic component;`
  *
+ *   Create a destruction function. (example: `DeleteMyComponent`)
  *   In the destruction function, use `CguiDeleteComponentBasic()` to free the
  *   memory allocated when creation.
  *
- *   In the update function, call `CguiUpdateComponentBasic()` before updating
- *   your component.
+ *   Create an update function. (example: `UpdateMyComponent`)
+ *   In the update function, DO NOT call `CguiUpdateComponentBasic()`. Instead
+ *   update your component as usual.
  *
- *   In the draw function, call `CguiDrawComponentBasic()` before drawing
- *   your component.
+ *   Create a drawing function. (example: `DrawMyComponent`)
+ *   In the draw function, DO NOT call `CguiDrawComponentBasic()`. Instead
+ *   draw your component as usual.
  *
  *   The update function pointer in `CguiComponentBasic` is called when the
  *   update funciton in the element is called.
@@ -85,7 +84,52 @@
  *   exception of "Drawing-related functions" from raylib.
  *
  *   Example: ```c
- *     typedef struct MyComponent { CguiComponentBasic *component; };
+ *      typedef struct MyComponent {
+ *          CguiComponentBasic *component;
+ *          // Your other values.
+ *      };
+ *      
+ *      // Create your component.
+ *      MyComponent *CreateMyComponent(CguiInstance *instance)
+ *      {
+ *          if (!instance) return NULL;
+ *          MyComponent *component = (MyComponent *)malloc(sizeof(MyComponent));
+ *          if (!component) return NULL;
+ *          
+ *          component->component = CguiCreateComponentBasic(instance);
+ *          
+ *          // Put your additional code.
+ *      }
+ *      
+ *      // Delete your created component.
+ *      void DeleteMyComponent(CguiInstance *instance, MyComponent *component)
+ *      {
+ *          if (!instance || !component) return NULL;
+ *          
+ *          // Put your additional code.
+ *          
+ *          CguiDeleteComponentBasic(instance, component->component);
+ *          free(component);
+ *      }
+ *      
+ *      // Update your created component
+ *      void UpdateMyComponent(CguiInstance *instance, MyComponent *component)
+ *      {
+ *          if (!instance || !component) return NULL;
+ *          
+ *          // Put your additional code.
+ *          // WARNING: Don't call `CguiUpdateComponentBasic()`
+ *      }
+ *      
+ *      // Draw your created component
+ *      void DrawMyComponent(CguiInstance *instance, MyComponent *component)
+ *      {
+ *          if (!instance || !component) return NULL;
+ *          
+ *          // Put your additional code.
+ *          // WARNING: Don't call `CguiDrawComponentBasic()`
+ *      }
+ *   ```
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * How component and element come together in love?
@@ -112,7 +156,7 @@ extern "C" {            // Prevents name mangling of functions.
 
 void DrawTextureFullscreen(Texture texture, bool isRenderTexture);              // Draw texture to fit the render size.
 Color ApplyHSVOnColor(Color color, Vector3 hsv);                                // Apply (add as shifts) HSV Values on the color.
-
+float FloatClamp(float value, float minimum, float maximum);                    // Clamp the floating point value between minimum and maximum.
 
 
 /*******************************************************************************
@@ -178,7 +222,7 @@ typedef struct CguiTextProperties
 // All the default shader variables used by Crystal GUI.
 typedef struct CguiShaderVariables
 {
-    // Shader properties contains shader variables that do not depend on the shader use.
+    // Shader properties contains shader variables that do not depend on the use case of shader.
     // Example: "rectangle" is highly dependent on where and how the shader is used,
     // which is excluded from properties struct.
     struct ShaderProperties
@@ -200,20 +244,20 @@ typedef struct CguiShaderVariables
     struct ShadowShaderVariables
     {
         float resolution[2];
-        float rectangle[4];         // Excluded from properties struct.
+        // float rectangle[4];      // Excluded from properties struct.
         float roundness;
         float shadowRadius;
         float shadowSize;
         float shadowOffset[2];
-        float shadowColor[4];       // Excluded from properties struct.
+        // float shadowColor[4];    // Excluded from properties struct.
     } shadowShaderVariables;
 
     struct RectangleShaderVariables
     {
         float resolution[2];
-        float rectangle[4];         // Excluded from properties struct.
+        // float rectangle[4];      // Excluded from properties struct.
         float roundness;
-        float rectangleTint[4];     // Excluded from properties struct.
+        // float rectangleTint[4];  // Excluded from properties struct.
     } rectangleShaderVariables;
 } CguiShaderVariables;
 
@@ -243,9 +287,9 @@ typedef struct CguiPreprocessedResources
 // Main Crystal GUI Instance, used in most of the functions.
 typedef struct CguiInstance
 {
-    Shader blurShader;              // Blur shader.
-    Shader shadowShader;            // Shadow shader.
-    Shader rectangleShader;         // Shader to draw rounded rectangle.
+    Shader blurShader;                      // Blur shader.
+    Shader shadowShader;                    // Shadow shader.
+    Shader rectangleShader;                 // Shader to draw rounded rectangle.
 
     CguiShaderVariables shaderVariables;    // All the default shader variables used by Crystal GUI.
 
@@ -253,16 +297,16 @@ typedef struct CguiInstance
     int shadowShaderLocs[CRYSTALGUI_SHADOW_SHADER_LOC_MAX];         // Shadow shader custom uniform locations.
     int rectangleShaderLocs[CRYSTALGUI_RECTANGLE_SHADER_LOC_MAX];   // Rectangle shader custom uniform locations.
 
-    RenderTexture blurInputRenderTexture;   // Input frame buffer to be blurred.
-    RenderTexture blurOutputRenderTexture;  // Blurred frame buffer.
-    RenderTexture textRenderTexture;        // Render texture used to temporarily store text to be blurred later.
+    RenderTexture blurInputRenderTexture;   // Input render texture to be blurred.
+    RenderTexture blurOutputRenderTexture;  // Blurred render texture.
+    RenderTexture tempTextRenderTexture;    // Render texture used to temporarily store text to be blurred later.
 
-    CguiTextProperties textProperties;  // Font properties.
-    CguiThemeColors themeColors;        // All the colors.
+    CguiTextProperties textProperties;      // Font properties.
+    CguiThemeColors themeColors;            // All the colors.
 
-    float focusTimerSpeed;          // Focus Fade speed.
-    float animationTimerSpeed;      // Animation speed.
-    float colorTransparency;        // Transparency of color ranging from 0.0f to 1.0f .
+    float focusTimerSpeed;                  // Focus Fade speed.
+    float animationTimerSpeed;              // Animation speed.
+    float colorTransparency;                // Transparency of color ranging from 0.0f to 1.0f .
 } CguiInstance;
 
 
@@ -275,7 +319,7 @@ void CguiLoadDefaultShaders(CguiInstance *instance);                            
 void CguiUnloadDefaultShaders(CguiInstance *instance);                          // Unload default shaders.
 void CguiSetDefaultShaderProperties(CguiInstance *instance);                    // Set default shader property values.
 void CguiSetDefaultShaderVariables(CguiInstance *instance);                     // Set property values to shader variables.
-void CguiSetDefaultShaderLocations(CguiInstance *instance);                     // Get default shader locations.
+void CguiSetDefaultShaderLocations(CguiInstance *instance);                     // Set default shader locations.
 void CguiApplyShaderVariables(CguiInstance *instance);                          // Apply shader variables to shader.
 void CguiLoadRenderTextures(CguiInstance *instance);                            // Load render textures.
 void CguiUnloadRenderTextures(CguiInstance *instance);                          // Unload render texture.
@@ -284,8 +328,11 @@ void CguiSetDefaultThemeColors(CguiInstance *instance);                         
 CguiInstance *CguiCreateInstance(void);                                         // Create a new instance of Crystal GUI.
 void CguiDeleteInstance(CguiInstance *instance);                                // Delete the created Crystal GUI instance.
 void CguiUpdateResolution(CguiInstance *instance);                              // Update shader and render texture resolution. (reloads render texture)
-void CguiBlurRenderTexture(CguiInstance *instance);                             // Apply blur effect to the input frame.
+void CguiBlurRenderTexture(CguiInstance *instance);                             // Apply blur effect to the input blur render texture.
 
+void CguiDrawShaderRectangle(CguiInstance *instance, Rectangle rectangle, Color rectangleColor, Color shadowColor); // Draw a rectangle using default shaders.
+void CguiDrawShaderText(CguiInstance *instance, const char *text, Rectangle rectangle);                             // Draw text using default shaders.
+void CguiDrawShaderCheckbox(CguiInstance *instance, Rectangle rectangle, Color tickedColor, Color untickedColor, Color shadowColor, float tickThickness, float animationTime);  // Draw a rectangle with ticking animation.
 
 
 /*******************************************************************************
@@ -293,8 +340,8 @@ void CguiBlurRenderTexture(CguiInstance *instance);                             
  */
 
 // Placement of the component in an element.
-// An element cah have propertis to control the usage of placement.
-// It can choose to use onlh left center and right placement and clamp everything.
+// An element can have propertis to control the usage of placement.
+// It can choose to use only left center and right placement and clamp everything.
 // Placement also acts as an anchor when an element gets resized.
 typedef enum CguiPlacement
 {
@@ -326,7 +373,7 @@ typedef struct CguiComponentBasic
     void (*draw)(void *component);  // Function to draw the component.
     int placement;                  // Placement of the component in element.
     Rectangle minimumBounds;        // Minimum bounds required by the component.
-    void *elementPointer;           // Nullable pointer to the element (automatially set)
+    void *elementPointer;           // Nullable pointer to the element. (automatially set)
 } CguiComponentBasic;
 
 CguiComponentBasic *CguiCreateComponentBasic(CguiInstance *instance, int placement, Rectangle minimumBounds);                           // Create basic component with no features.
@@ -343,28 +390,28 @@ void CguiDrawComponentBasic(CguiInstance *instance, CguiComponentBasic *componen
 // Display the text (with markdown)... that's it.
 typedef struct CguiComponentReadonlyText
 {
-    CguiComponentBasic *component;  // All component must have these elements.
+    CguiComponentBasic *component;  // All component must have these elements at first.
     const char *text;               // Supports few markdown formats. :O
     bool isRawText;                 // Prevents markdown formatting.
 } CguiComponentReadonlyText;
 
-CguiComponentReadonlyText *CguiCreateComponentReadonlyText(CguiInstance *instance, int placement, Rectangle minimumBounds, const char *text, bool isRawText);   // Create basic component with no features.
-void CguiDeleteComponentReadonlyText(CguiInstance *instance, CguiComponentReadonlyText *component);                                     // Delete the created basic component.
-void CguiUpdateComponentReadonlyText(CguiInstance *instance, CguiComponentReadonlyText *component);                                     // Update the created basic component.
-void CguiDrawComponentReadonlyText(CguiInstance *instance, CguiComponentReadonlyText *component);                                       // Draw the created basic component.
+CguiComponentReadonlyText *CguiCreateComponentReadonlyText(CguiInstance *instance, int placement, Rectangle minimumBounds, const char *text, bool isRawText);   // Create readonly text component.
+void CguiDeleteComponentReadonlyText(CguiInstance *instance, CguiComponentReadonlyText *component);                                     // Delete the created readonly text component.
+void CguiUpdateComponentReadonlyText(CguiInstance *instance, CguiComponentReadonlyText *component);                                     // Update the created readonly text component.
+void CguiDrawComponentReadonlyText(CguiInstance *instance, CguiComponentReadonlyText *component);                                       // Draw the created readonly text component.
 
 // Display a texture (icon)... that's it.
 typedef struct CguiComponentIconTexture
 {
-    CguiComponentBasic *component;  // All component must have these elements.
+    CguiComponentBasic *component;  // All component must have these elements at first.
     Texture texture;                // Texture to draw.
     Color tint;                     // Tint color for texture.
 } CguiComponentIconTexture;
 
-CguiComponentIconTexture *CguiCreateComponentIconTexture(CguiInstance *instance, int placement, Rectangle minimumBounds);               // Create basic component with no features.
-void CguiDeleteComponentIconTexture(CguiInstance *instance, CguiComponentIconTexture *component);                                       // Delete the created basic component.
-void CguiUpdateComponentIconTexture(CguiInstance *instance, CguiComponentIconTexture *component);                                       // Update the created basic component.
-void CguiDrawComponentIconTexture(CguiInstance *instance, CguiComponentIconTexture *component);                                         // Draw the created basic component.
+CguiComponentIconTexture *CguiCreateComponentIconTexture(CguiInstance *instance, int placement, Rectangle minimumBounds, Texture texture, Color tint);  // Create icon texture component.
+void CguiDeleteComponentIconTexture(CguiInstance *instance, CguiComponentIconTexture *component);                                       // Delete the created icon texture component.
+void CguiUpdateComponentIconTexture(CguiInstance *instance, CguiComponentIconTexture *component);                                       // Update the created icon texture component.
+void CguiDrawComponentIconTexture(CguiInstance *instance, CguiComponentIconTexture *component);                                         // Draw the created icon texture component.
 
 
 
@@ -378,10 +425,10 @@ typedef struct CguiElement
     Rectangle bounds;               // Boundery of the element.
 } CguiElement;
 
-CguiElement *CguiCreateElement(CguiInstance *instance);                         //
-void CguiDeleteElement(CguiInstance *instance, CguiElement *element);           //
-void CguiUpdateElement(CguiInstance *instance, CguiElement *element);           //
-void CguiDrawElement(CguiInstance *instance, CguiElement *element);             //
+CguiElement *CguiCreateElement(CguiInstance *instance);                         // Create element.
+void CguiDeleteElement(CguiInstance *instance, CguiElement *element);           // Delete the created element.
+void CguiUpdateElement(CguiInstance *instance, CguiElement *element);           // Update the created element.
+void CguiDrawElement(CguiInstance *instance, CguiElement *element);             // Draw the created element.
 
 #if defined(__cplusplus)
 }
