@@ -1,0 +1,12 @@
+if(NOT EXISTS "@CMAKE_CURRENT_BINARY_DIR@/install_manifest.txt")
+    message(FATAL_ERROR "File not found: '@CMAKE_CURRENT_BINARY_DIR@/install_manifest.txt'")
+endif()
+
+file(READ "@CMAKE_CURRENT_BINARY_DIR@/install_manifest.txt" MANIFEST)
+string(REPLACE "\n" ";" MANIFEST_FILES "${MANIFEST}")
+foreach(FILE ${MANIFEST_FILES})
+    if(EXISTS "${FILE}")
+        message(STATUS "Removing ${FILE}")
+        file(REMOVE "${FILE}")
+    endif()
+endforeach()

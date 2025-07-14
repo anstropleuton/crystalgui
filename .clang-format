@@ -1,0 +1,74 @@
+# Formatting Style
+# See the list of all options: https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+
+BasedOnStyle: Google
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+
+# Allman for code and K&R for declaration
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterFunction: true
+  AfterControlStatement: true
+  AfterEnum: false
+  AfterStruct: false
+  AfterClass: false
+  AfterNamespace: false
+  BeforeElse: true
+  BeforeCatch: true
+  BeforeWhile: true
+  BeforeLambdaBody: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+
+ColumnLimit: 0
+
+# Keep includes tidy
+IncludeBlocks: Regroup
+SortIncludes: true
+IncludeIsMainRegex: '^$'
+
+# Alignments and spaces
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
+AlignTrailingComments: true
+AlignArrayOfStructures: Left
+SpacesBeforeTrailingComments: 1
+SpaceBeforeParens: ControlStatements
+SpaceAfterCStyleCast: true
+AlignConsecutiveShortCaseStatements:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
+  AlignCaseColons: false
+
+# Compacting
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortLambdasOnASingleLine: All
+BinPackParameters: false
+BinPackArguments: false
+AllowAllParametersOfDeclarationOnNextLine: true
+
+# Pointer and erence alignment
+PointerAlignment: Right
+ReferenceAlignment: Right
+DerivePointerAlignment: false
+SpaceAroundPointerQualifiers: Default
+
+# Indentation for switch statements
+IndentCaseBlocks: false
+IndentCaseLabels: true
+
+# Keep templates looking nice
+AlignAfterOpenBracket: true
+SpacesInAngles: false
+
+# Other formatting preferences
+Cpp11BracedListStyle: false
+EmptyLineBeforeAccessModifier: Leave
+AccessModifierOffset: -4
+ReflowComments: Never

@@ -1,0 +1,23 @@
+# Doxyfile
+
+PROJECT_NAME           = "@PROJECT_NAME@"
+PROJECT_NUMBER         = @PROJECT_VERSION@
+PROJECT_BRIEF          = "@PROJECT_DESCRIPTION@"
+PROJECT_LOGO           = favicon.ico
+PROJECT_ICON           = favicon.ico
+
+OUTPUT_DIRECTORY       = @CRYSTALGUI_BINARY_DIR@/documentation
+INPUT                  = ../include/@PROJECT_NAME@ ../changelog.md ../contributing.md ../coding_guidelines.md ../license.md ../readme.md
+USE_MDFILE_AS_MAINPAGE = ../readme.md
+
+HTML_HEADER            = header.html
+HTML_FOOTER            = footer.html
+HTML_EXTRA_STYLESHEET  = background.css doxygen-awesome.css
+HTML_EXTRA_FILES       = background.png favicon.ico
+
+GENERATE_TREEVIEW      = YES
+DISABLE_INDEX          = NO
+FULL_SIDEBAR           = NO
+HTML_COLORSTYLE        = AUTO_DARK
+HTML_DYNAMIC_SECTIONS  = YES
+GENERATE_LATEX         = NO
