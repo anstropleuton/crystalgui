@@ -1,3 +1,9 @@
 [submodule "deps/doctest"]
 	path = deps/doctest
 	url = https://github.com/doctest/doctest.git
+[submodule "deps/raylib"]
+	path = deps/raylib
+	url = /media/me/storage/projects/repos/raylib
+[submodule "deps/pango"]
+	path = deps/pango
+	url = https://gitlab.gnome.org/GNOME/pango

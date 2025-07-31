@@ -3,16 +3,15 @@
 /// @author    Anstro Pleuton
 /// @copyright Copyright (c) 2025 Anstro Pleuton
 ///
-/// Crystal GUI - A modern GUI framework for raylib.
+/// Crystal GUI - A GUI framework for raylib.
 ///
-/// This source file contains implementations for easing functions of
-/// Crystal GUI.
+/// This source file contains implementations for easing functions.
 ///
 /// This project is licensed under the terms of MIT license.
 
 #include <math.h>
 
-#include "crystalgui.h"
+#include "crystalgui/crystalgui.h"
 
 float CguiEaseLinear(float t)
 {

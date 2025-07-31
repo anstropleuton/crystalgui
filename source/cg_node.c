@@ -3,42 +3,40 @@
 /// @author    Anstro Pleuton
 /// @copyright Copyright (c) 2025 Anstro Pleuton
 ///
-/// Crystal GUI - A modern GUI framework for raylib.
+/// Crystal GUI - A GUI framework for raylib.
 ///
-/// This source file contains implementations for node functionality of
-/// Crystal GUI.
+/// This source file contains implementations for basic node.
 ///
 /// This project is licensed under the terms of MIT license.
 
 #include <string.h>
 
-#include "crystalgui.h"
+#include "crystalgui/crystalgui.h"
 #include "raylib.h"
 
-int       cguiNameCounter = 0;
-CguiNode *cguiFocusedNode = NULL;
+extern int cguiNameCounter;
 
 // Node management
 
 CguiNode *CguiCreateNode(void)
 {
-    return CguiCreateNodeEx(TextFormat("CguiUnnamedNode #%d", ++cguiNameCounter));
+    return CguiCreateNodeEx(CguiTZeroSize(), NULL);
 }
 
-CguiNode *CguiCreateNodeEx(const char *name)
+CguiNode *CguiCreateNodeEx(CguiTransformation transformation, const char *name)
 {
     if (!name)
     {
         name = TextFormat("CguiUnnamedNode #%d", ++cguiNameCounter);
     }
 
-    CguiNode *node = CG_MALLOC(sizeof(CguiNode));
+    CguiNode *node = CG_MALLOC_NULL(sizeof(CguiNode));
     if (!node)
     {
         return NULL;
     }
 
-    node->name = CG_MALLOC(strlen(name) + 1);
+    node->name = CG_MALLOC_NULL(strlen(name) + 1);
     if (!node->name)
     {
         CG_FREE_NULL(node);
@@ -47,36 +45,58 @@ CguiNode *CguiCreateNodeEx(const char *name)
 
     strcpy(node->name, name);
 
-    node->enabled = true;
-    node->visible = true;
-    node->rebound = true;
+    node->enabled        = true;
+    node->rebound        = true;
+    node->transformation = transformation;
+
+    CG_LOG_TRACE("Created node: %s", node->name);
 
     return node;
 }
 
-CguiNode *CguiCreateNodePro(const char *name, int type, const void *data, int dataSize)
+CguiNode *CguiCreateNodePro(CguiTransformation transformation, const char *name, int type, const void *data, int dataSize)
 {
-    if (!name)
-    {
-        name = TextFormat("CguiUnnamedNode #%d", ++cguiNameCounter);
-    }
-
-    CguiNode *node = CguiCreateNodeEx(name);
+    CguiNode *node = CguiCreateNodeEx(transformation, name);
     if (!node)
     {
         return NULL;
     }
 
-    node->data = CG_MALLOC(dataSize);
-    if (!node->data)
+    node->type = type;
+    if (dataSize > 0)
+    {
+        node->data = CG_MALLOC_NULL(dataSize);
+        if (!node->data)
+        {
+            CguiDeleteNode(node);
+            return NULL;
+        }
+
+        node->dataSize = dataSize;
+        if (data) memcpy(node->data, data, dataSize);
+    }
+
+    return node;
+}
+
+CguiNode *CguiCreateNodeProMax(CguiTransformation transformation, const char *name, int type, const void *data, int dataSize, const void *instanceData, int instanceDataSize)
+{
+    CguiNode *node = CguiCreateNodePro(transformation, name, type, data, dataSize);
+    if (!node)
+    {
+        return NULL;
+    }
+
+    node->instanceData = CG_MALLOC_NULL(instanceDataSize);
+    if (!node->instanceData)
     {
         CguiDeleteNode(node);
         return NULL;
     }
 
-    node->type     = type;
-    node->dataSize = dataSize;
-    if (data) memcpy(node->data, data, dataSize);
+    node->type             = type;
+    node->instanceDataSize = instanceDataSize;
+    if (instanceData) memcpy(node->instanceData, instanceData, instanceDataSize);
 
     return node;
 }
@@ -111,6 +131,8 @@ void CguiDeleteNodeSelf(CguiNode *node)
         return;
     }
 
+    CG_LOG_TRACE("Deleted node: %s", node->name);
+
     if (node->deleteNodeData)
     {
         node->deleteNodeData(node);
@@ -120,19 +142,21 @@ void CguiDeleteNodeSelf(CguiNode *node)
     if (node->parent)
     {
         CguiRemoveChild(node->parent, node);
-        node->parent = NULL;
     }
 
-    if (node->name)
+    // Unlink from template source if it is still linked
+    if (node->templateSource)
     {
-        CG_FREE_NULL(node->name);
+        CguiUnlinkTemplate(node);
     }
 
-    if (node->data)
-    {
-        CG_FREE_NULL(node->data);
-        node->dataSize = 0;
-    }
+    CG_FREE_NULL(node->name);
+
+    CG_FREE_NULL(node->data);
+    node->dataSize = 0;
+
+    CG_FREE_NULL(node->instanceData);
+    node->instanceDataSize = 0;
 
     CG_FREE_NULL(node);
 }
@@ -311,8 +335,8 @@ void CguiDebugDrawNodeSelf(CguiNode *node)
     {
         // Draw basic debug info
         DrawRectangleLinesEx(node->bounds, 1.0f, GRAY);
-        DrawText(TextFormat("%s", node->name), node->bounds.x, node->bounds.y - 10, 10, GRAY);
-        DrawText(TextFormat("%.0f, %.0f, %.0f, %.0f", node->bounds.x, node->bounds.y, node->bounds.width, node->bounds.height), node->bounds.x, node->bounds.y, 10, GRAY);
+        DrawText(TextFormat("%s [%x]", node->name, node->type), node->bounds.x, node->bounds.y - 10, 10, GRAY);
+        DrawText(TextFormat("{%.0f,%.0f,%.0f,%.0f}, B:%c, H:%c:%d, S:%c", node->bounds.x, node->bounds.y, node->bounds.width, node->bounds.height, node->rebound ? 'T' : 'F', node->parent != NULL ? 'T' : 'F', node->childrenCount, node->resync ? 'T' : 'F'), node->bounds.x, node->bounds.y, 10, GRAY);
     }
 }
 
@@ -331,7 +355,7 @@ CguiNode *CguiCloneNode(CguiNode *node)
 
     if (node->children && node->childrenCount > 0)
     {
-        newNode->children = CG_MALLOC(sizeof(CguiNode *) * node->childrenCount);
+        newNode->children = CG_MALLOC_NULL(sizeof(CguiNode *) * node->childrenCount);
         if (!newNode->children)
         {
             CguiDeleteNode(newNode);
@@ -364,7 +388,7 @@ CguiNode *CguiCloneNodeSelf(CguiNode *node)
         return NULL;
     }
 
-    CguiNode *newNode = CguiCreateNodeEx(TextFormat("%s (Clone #%d)", node->name, ++cguiNameCounter));
+    CguiNode *newNode = CguiCreateNodeEx(CguiTZeroSize(), TextFormat("%s (Clone #%d)", node->name, ++cguiNameCounter));
     if (!newNode)
     {
         return NULL;
@@ -379,7 +403,336 @@ CguiNode *CguiCloneNodeSelf(CguiNode *node)
     return newNode;
 }
 
+CguiNode *CguiCreateInstance(CguiNode *templateNode)
+{
+    if (!templateNode)
+    {
+        return NULL;
+    }
+
+    CguiNode *instance = CguiCreateInstanceSelf(templateNode);
+    if (!instance)
+    {
+        return NULL;
+    }
+
+    // Create instance of children
+    // Each children's template source is the template node's children rather
+    // than the template node itself
+    if (templateNode->children && templateNode->childrenCount > 0)
+    {
+        instance->children = CG_MALLOC_NULL(sizeof(CguiNode *) * templateNode->childrenCount);
+        if (!instance->children)
+        {
+            CguiDeleteNode(instance);
+            return NULL;
+        }
+
+        instance->childrenCount    = templateNode->childrenCount;
+        instance->childrenCapacity = templateNode->childrenCount;
+
+        for (int i = 0; i < templateNode->childrenCount; i++)
+        {
+            instance->children[i] = CguiCreateInstance(templateNode->children[i]);
+            if (!instance->children[i])
+            {
+                CguiDeleteNode(instance);
+                return NULL;
+            }
+
+            instance->children[i]->parent = instance;
+        }
+    }
+
+    return instance;
+}
+
+CguiNode *CguiCreateInstanceSelf(CguiNode *templateNode)
+{
+    if (!templateNode)
+    {
+        return NULL;
+    }
+
+    // Optimization: prevent copying data twice
+    // Instance data is still implanted
+    CguiNode *instance = CguiCreateNodeProMax(CguiTZeroSize(), TextFormat("%s (Instance #%d)", templateNode->name, ++cguiNameCounter), templateNode->type, NULL, templateNode->dataSize, templateNode->instanceData, templateNode->instanceDataSize);
+    if (!instance)
+    {
+        return NULL;
+    }
+
+    if (!CguiCopyNodeValuesNoTi(templateNode, instance))
+    {
+        CguiDeleteNode(instance);
+        return NULL;
+    }
+
+    if (!CguiLinkTemplate(instance, templateNode))
+    {
+        CguiDeleteNode(instance);
+        return NULL;
+    }
+
+    return instance;
+}
+
+void CguiApplyTemplateResync(CguiNode *node)
+{
+    if (!node)
+    {
+        return;
+    }
+
+    node->resync = true;
+
+    for (int i = 0; i < node->childrenCount; i++)
+    {
+        CguiApplyTemplateResync(node->children[i]);
+    }
+}
+
+bool CguiLinkTemplate(CguiNode *node, CguiNode *templateNode)
+{
+    if (!node || !templateNode)
+    {
+        return false;
+    }
+
+    // Prevent duplicates
+    int foundInstanceIndex = CguiFindInstanceIndex(templateNode, node);
+    if (foundInstanceIndex != -1)
+    {
+        return false;
+    }
+
+    if (templateNode->instancesCount == templateNode->instancesCapacity)
+    {
+        if (!CguiSetInstancesCapacity(templateNode, templateNode->instancesCapacity * 2))
+        {
+            return false;
+        }
+    }
+
+    // Order does not matter, insert at end
+    templateNode->instances[templateNode->instancesCount] = node;
+    templateNode->instancesCount++;
+    node->templateSource = templateNode;
+
+    return true;
+}
+
+bool CguiUnlinkTemplate(CguiNode *node)
+{
+    if (!node || !node->templateSource)
+    {
+        return false;
+    }
+
+    int foundInstanceIndex = CguiFindInstanceIndex(node->templateSource, node);
+    if (foundInstanceIndex == -1)
+    {
+        return false;
+    }
+
+    CguiNode *templateSource = node->templateSource;
+    node->templateSource     = NULL;
+
+    // Shift element left to remove element
+    memmove(&templateSource->instances[foundInstanceIndex], &templateSource->instances[foundInstanceIndex + 1], sizeof(CguiNode *) * (templateSource->instancesCount - foundInstanceIndex));
+    templateSource->instancesCount--;
+
+    // Reduce capacity if < 25% used
+    if (templateSource->instancesCapacity > 1 && templateSource->instancesCount < templateSource->instancesCapacity / 4)
+    {
+        // Ignore reallocation failure
+        CguiSetInstancesCapacity(templateSource, templateSource->instancesCapacity / 2);
+    }
+
+    return true;
+}
+
+bool CguiSetInstancesCapacity(CguiNode *node, int newCapacity)
+{
+    if (!node || newCapacity < node->instancesCount)
+    {
+        return false;
+    }
+
+    // At least one capacity needed
+    if (newCapacity == 0)
+    {
+        newCapacity = 1;
+    }
+
+    CguiNode **newInstances = CG_REALLOC(node->instances, sizeof(CguiNode *) * newCapacity);
+    if (!newInstances)
+    {
+        return false;
+    }
+
+    node->instances         = newInstances;
+    node->instancesCapacity = newCapacity;
+    return true;
+}
+
+int CguiFindInstanceIndex(CguiNode *templateSource, CguiNode *instance)
+{
+    if (!templateSource || !instance)
+    {
+        return -1;
+    }
+
+    for (int i = 0; i < templateSource->instancesCount; i++)
+    {
+        if (templateSource->instances[i] == instance)
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+void CguiSyncInstances(CguiNode *node, bool resync)
+{
+    if (!node)
+    {
+        return;
+    }
+
+    bool instanceResync = CguiSyncInstancesSelf(node, resync);
+
+    for (int i = 0; i < node->instancesCount; i++)
+    {
+        CguiSyncInstances(node->instances[i], instanceResync);
+    }
+}
+
+bool CguiSyncInstancesSelf(CguiNode *node, bool resync)
+{
+    if (!node)
+    {
+        return false;
+    }
+
+    if (!node->templateSource)
+    {
+        return resync;
+    }
+
+    if (resync)
+    {
+        if (!CguiCopyNodeValuesNoTi(node->templateSource, node))
+        {
+            return false;
+        }
+
+        if (node->override)
+        {
+            node->override(node);
+        }
+    }
+
+    node->templateSource->resync = false;
+    return node->resync || resync;
+}
+
+void CguiSyncHierarchy(CguiNode *node)
+{
+    if (!node)
+    {
+        return;
+    }
+
+    CguiSyncInstances(node, node->resync);
+
+    for (int i = 0; i < node->childrenCount; i++)
+    {
+        CguiSyncHierarchy(node->children[i]);
+    }
+}
+
 // Node children management
+
+bool CguiInsertChild(CguiNode *parent, CguiNode *child)
+{
+    if (!parent || !child)
+    {
+        return false;
+    }
+
+    return CguiInsertChildAt(parent, child, parent->childrenCount);
+}
+
+bool CguiInsertChildAt(CguiNode *parent, CguiNode *child, int childIndex)
+{
+    if (!parent || !child || childIndex < 0 || childIndex > parent->childrenCount)
+    {
+        return false;
+    }
+
+    // Prevent duplicates
+    int foundChildIndex = CguiFindChildIndex(parent, child);
+    if (foundChildIndex != -1)
+    {
+        return false;
+    }
+
+    // Resize capacity if full
+    if (parent->childrenCount == parent->childrenCapacity)
+    {
+        if (!CguiSetChildrenCapacity(parent, parent->childrenCapacity * 2))
+        {
+            return false;
+        }
+    }
+
+    // Shift elements right to insert element
+    memmove(&parent->children[childIndex + 1], &parent->children[childIndex], sizeof(CguiNode *) * (parent->childrenCount - childIndex));
+
+    parent->children[childIndex] = child;
+    parent->childrenCount++;
+    parent->rebound = true;
+    child->parent   = parent;
+
+    return true;
+}
+
+bool CguiRemoveChild(CguiNode *parent, CguiNode *child)
+{
+    int foundChildIndex = CguiFindChildIndex(parent, child);
+    if (foundChildIndex == -1)
+    {
+        return false;
+    }
+
+    return CguiRemoveChildAt(parent, foundChildIndex);
+}
+
+bool CguiRemoveChildAt(CguiNode *parent, int childIndex)
+{
+    if (!parent || childIndex < 0 || childIndex >= parent->childrenCount)
+    {
+        return false;
+    }
+
+    parent->children[childIndex]->parent = NULL;
+
+    // Shift elements left to remove element
+    memmove(&parent->children[childIndex], &parent->children[childIndex + 1], sizeof(CguiNode *) * (parent->childrenCount - childIndex));
+    parent->childrenCount--;
+    parent->rebound = true;
+
+    // Reduce capacity if < 25% used
+    if (parent->childrenCapacity > 1 && parent->childrenCount < parent->childrenCapacity / 4)
+    {
+        // Ignore reallocation failure
+        CguiSetChildrenCapacity(parent, parent->childrenCapacity / 2);
+    }
+
+    return true;
+}
 
 CguiNode *CguiCreateChild(CguiNode *parent)
 {
@@ -425,78 +778,6 @@ CguiNode *CguiCreateChildAt(CguiNode *parent, int childIndex)
     return node;
 }
 
-bool CguiInsertChild(CguiNode *parent, CguiNode *child)
-{
-    return CguiInsertChildAt(parent, child, parent->childrenCount);
-}
-
-bool CguiInsertChildAt(CguiNode *parent, CguiNode *child, int childIndex)
-{
-    if (!parent || !child || childIndex < 0 || childIndex > parent->childrenCount)
-    {
-        return false;
-    }
-
-    // Prevent duplicates
-    int foundChildIndex = CguiFindChildIndex(parent, child);
-    if (foundChildIndex != -1)
-    {
-        return false;
-    }
-
-    // Resize capacity if full
-    if (parent->childrenCount == parent->childrenCapacity)
-    {
-        if (!CguiSetChildrenCapacity(parent, parent->childrenCapacity * 2))
-        {
-            return false;
-        }
-    }
-
-    // Shift elements right to insert element
-    memmove(&parent->children[childIndex + 1], &parent->children[childIndex], sizeof(CguiNode *) * (parent->childrenCount - childIndex));
-
-    parent->children[childIndex] = child;
-    parent->childrenCount++;
-    child->parent = parent;
-
-    return true;
-}
-
-bool CguiRemoveChild(CguiNode *parent, CguiNode *child)
-{
-    int foundChildIndex = CguiFindChildIndex(parent, child);
-    if (foundChildIndex == -1)
-    {
-        return false;
-    }
-
-    return CguiRemoveChildAt(parent, foundChildIndex);
-}
-
-bool CguiRemoveChildAt(CguiNode *parent, int childIndex)
-{
-    if (!parent || childIndex < 0 || childIndex >= parent->childrenCount)
-    {
-        return false;
-    }
-
-    parent->children[childIndex]->parent = NULL;
-
-    // Shift elements left to remove element
-    memmove(&parent->children[childIndex], &parent->children[childIndex + 1], sizeof(CguiNode *) * (parent->childrenCount - childIndex));
-    parent->childrenCount--;
-
-    // Reduce capacity if < 25% used
-    if (parent->childrenCapacity > 1 && parent->childrenCount < parent->childrenCapacity / 4)
-    {
-        // Ignore reallocation failure
-        CguiSetChildrenCapacity(parent, parent->childrenCapacity / 2);
-    }
-
-    return true;
-}
-
 bool CguiDeleteChild(CguiNode *parent, CguiNode *child)
 {
     int childIndex = CguiFindChildIndex(parent, child);
@@ -540,6 +821,7 @@ bool CguiRemoveAllChildren(CguiNode *parent)
     }
 
     parent->childrenCount = 0;
+    parent->rebound       = true;
 
     // Optimization: Preserve capacity as-is
     return true;
@@ -547,19 +829,25 @@ bool CguiRemoveAllChildren(CguiNode *parent)
 
 bool CguiDeleteAllChildren(CguiNode *parent)
 {
-    if (!parent || parent->childrenCount == 0)
+    if (!parent)
     {
         return false;
+    }
+
+    // Ignore empty nodes
+    if (parent->childrenCount == 0)
+    {
+        return true;
     }
 
     for (int i = parent->childrenCount - 1; i >= 0; i--)
     {
         parent->children[i]->parent = NULL; // Optimization: reduce unnecessary searching for child in current and unnecessary reallocations when deleting
         CguiDeleteNode(parent->children[i]);
-        parent->children = NULL;
     }
 
     parent->childrenCount = 0;
+    parent->rebound       = true;
 
     // Optimization: Preserve capacity as-is
     return true;
@@ -711,7 +999,75 @@ bool CguiTransferChildrenRange(CguiNode *fromParent, int indexBegin, int indexEn
     return result;
 }
 
+CguiNode *CguiInsertChildren(CguiNode *parent, ...)
+{
+    if (!parent)
+    {
+        return NULL;
+    }
+
+    va_list args;
+    va_start(args, parent);
+    CguiNode *result = CguiInsertChildrenV(parent, args);
+    va_end(args);
+    return result;
+}
+
+CguiNode *CguiInsertChildrenAt(CguiNode *parent, int childIndex, ...)
+{
+    if (!parent)
+    {
+        return NULL;
+    }
+
+    va_list args;
+    va_start(args, childIndex);
+    CguiNode *result = CguiInsertChildrenAtV(parent, childIndex, args);
+    va_end(args);
+    return result;
+}
+
+CguiNode *CguiInsertChildrenV(CguiNode *parent, va_list args)
+{
+    if (!parent)
+    {
+        return NULL;
+    }
+
+    return CguiInsertChildrenAtV(parent, parent->childrenCount, args);
+}
+
+CguiNode *CguiInsertChildrenAtV(CguiNode *parent, int childIndex, va_list args)
+{
+    if (!parent)
+    {
+        return NULL;
+    }
+
+    bool      result = true;
+    CguiNode *child  = NULL;
+
+    for (int i = 0; (child = va_arg(args, CguiNode *)) != NULL; i++)
+    {
+        result &= CguiInsertChildAt(parent, child, childIndex + i);
+    }
+
+    return result ? parent : NULL;
+}
+
 // Transformation helpers
+
+CguiTransformation CguiTZeroSize(void)
+{
+    return (CguiTransformation) {
+        .position           = { 0.0f, 0.0f },
+        .size               = { 0.0f, 0.0f },
+        .isRelativePosition = { 1.0f, 1.0f },
+        .isRelativeSize     = { 0.0f, 0.0f },
+        .anchor             = { 0.0f, 0.0f },
+        .shrink             = { 0.0f, 0.0f }
+    };
+}
 
 CguiTransformation CguiTAbsolute(Vector2 pos, Vector2 size)
 {
@@ -761,7 +1117,7 @@ CguiTransformation CguiTOffsetScale(Vector2 offset, Vector2 scale)
     };
 }
 
-CguiTransformation CguiTCentered(Vector2 size)
+CguiTransformation CguiTCenter(Vector2 size)
 {
     return (CguiTransformation) {
         .position           = { 0.0f, 0.0f },
@@ -773,15 +1129,171 @@ CguiTransformation CguiTCentered(Vector2 size)
     };
 }
 
-CguiTransformation CguiTPadded(float padding)
+CguiTransformation CguiTTop(Vector2 size)
 {
     return (CguiTransformation) {
-        .position           = { 0.0f,           0.0f           },
-        .size               = { 1.0f,           1.0f           },
-        .isRelativePosition = { 0.0f,           0.0f           },
-        .isRelativeSize     = { 1.0f,           1.0f           },
-        .anchor             = { 0.0f,           0.0f           },
-        .shrink             = { padding * 2.0f, padding * 2.0f }
+        .position           = { 0.0f, 0.0f },
+        .size               = size,
+        .isRelativePosition = { 1.0f, 1.0f },
+        .isRelativeSize     = { 0.0f, 0.0f },
+        .anchor             = { 0.5f, 0.0f },
+        .shrink             = { 0.0f, 0.0f }
+    };
+}
+
+CguiTransformation CguiTBottom(Vector2 size)
+{
+    return (CguiTransformation) {
+        .position           = { 0.0f, 0.0f },
+        .size               = size,
+        .isRelativePosition = { 1.0f, 1.0f },
+        .isRelativeSize     = { 0.0f, 0.0f },
+        .anchor             = { 0.5f, 1.0f },
+        .shrink             = { 0.0f, 0.0f }
+    };
+}
+
+CguiTransformation CguiTLeft(Vector2 size)
+{
+    return (CguiTransformation) {
+        .position           = { 0.0f, 0.0f },
+        .size               = size,
+        .isRelativePosition = { 1.0f, 1.0f },
+        .isRelativeSize     = { 0.0f, 0.0f },
+        .anchor             = { 0.0f, 0.5f },
+        .shrink             = { 0.0f, 0.0f }
+    };
+}
+
+CguiTransformation CguiTRight(Vector2 size)
+{
+    return (CguiTransformation) {
+        .position           = { 0.0f, 0.0f },
+        .size               = size,
+        .isRelativePosition = { 1.0f, 1.0f },
+        .isRelativeSize     = { 0.0f, 0.0f },
+        .anchor             = { 1.0f, 0.5f },
+        .shrink             = { 0.0f, 0.0f }
+    };
+}
+
+CguiTransformation CguiTTopLeft(Vector2 size)
+{
+    return (CguiTransformation) {
+        .position           = { 0.0f, 0.0f },
+        .size               = size,
+        .isRelativePosition = { 1.0f, 1.0f },
+        .isRelativeSize     = { 0.0f, 0.0f },
+        .anchor             = { 0.0f, 0.0f },
+        .shrink             = { 0.0f, 0.0f }
+    };
+}
+
+CguiTransformation CguiTTopRight(Vector2 size)
+{
+    return (CguiTransformation) {
+        .position           = { 0.0f, 0.0f },
+        .size               = size,
+        .isRelativePosition = { 1.0f, 1.0f },
+        .isRelativeSize     = { 0.0f, 0.0f },
+        .anchor             = { 1.0f, 0.0f },
+        .shrink             = { 0.0f, 0.0f }
+    };
+}
+
+CguiTransformation CguiTBottomLeft(Vector2 size)
+{
+    return (CguiTransformation) {
+        .position           = { 0.0f, 0.0f },
+        .size               = size,
+        .isRelativePosition = { 1.0f, 1.0f },
+        .isRelativeSize     = { 0.0f, 0.0f },
+        .anchor             = { 0.0f, 1.0f },
+        .shrink             = { 0.0f, 0.0f }
+    };
+}
+
+CguiTransformation CguiTBottomRight(Vector2 size)
+{
+    return (CguiTransformation) {
+        .position           = { 0.0f, 0.0f },
+        .size               = size,
+        .isRelativePosition = { 1.0f, 1.0f },
+        .isRelativeSize     = { 0.0f, 0.0f },
+        .anchor             = { 1.0f, 1.0f },
+        .shrink             = { 0.0f, 0.0f }
+    };
+}
+
+CguiTransformation CguiTDockTop(float height)
+{
+    return (CguiTransformation) {
+        .position           = { 0.0f, 0.0f   },
+        .size               = { 1.0f, height },
+        .isRelativePosition = { 1.0f, 1.0f   },
+        .isRelativeSize     = { 1.0f, 0.0f   },
+        .anchor             = { 0.5f, 0.0f   },
+        .shrink             = { 0.0f, 0.0f   }
+    };
+}
+
+CguiTransformation CguiTDockBottom(float height)
+{
+    return (CguiTransformation) {
+        .position           = { 0.0f, 0.0f   },
+        .size               = { 1.0f, height },
+        .isRelativePosition = { 1.0f, 1.0f   },
+        .isRelativeSize     = { 1.0f, 0.0f   },
+        .anchor             = { 0.5f, 1.0f   },
+        .shrink             = { 0.0f, 0.0f   }
+    };
+}
+
+CguiTransformation CguiTDockLeft(float width)
+{
+    return (CguiTransformation) {
+        .position           = { 0.0f,  0.0f },
+        .size               = { width, 1.0f },
+        .isRelativePosition = { 1.0f,  1.0f },
+        .isRelativeSize     = { 0.0f,  1.0f },
+        .anchor             = { 0.0f,  0.5f },
+        .shrink             = { 0.0f,  0.0f }
+    };
+}
+
+CguiTransformation CguiTDockRight(float width)
+{
+    return (CguiTransformation) {
+        .position           = { 0.0f,  0.0f },
+        .size               = { width, 1.0f },
+        .isRelativePosition = { 1.0f,  1.0f },
+        .isRelativeSize     = { 0.0f,  1.0f },
+        .anchor             = { 1.0f,  0.5f },
+        .shrink             = { 0.0f,  0.0f }
+    };
+}
+
+CguiTransformation CguiTMargin(float margin)
+{
+    return (CguiTransformation) {
+        .position           = { 0.0f,          0.0f          },
+        .size               = { 1.0f,          1.0f          },
+        .isRelativePosition = { 1.0f,          1.0f          },
+        .isRelativeSize     = { 1.0f,          1.0f          },
+        .anchor             = { 0.5f,          0.5f          },
+        .shrink             = { margin * 2.0f, margin * 2.0f }
+    };
+}
+
+CguiTransformation CguiTFillParent(void)
+{
+    return (CguiTransformation) {
+        .position           = { 0.0f, 0.0f },
+        .size               = { 1.0f, 1.0f },
+        .isRelativePosition = { 1.0f, 1.0f },
+        .isRelativeSize     = { 1.0f, 1.0f },
+        .anchor             = { 0.0f, 0.0f },
+        .shrink             = { 0.0f, 0.0f }
     };
 }
 
@@ -795,7 +1307,72 @@ bool CguiIsTransformationEqual(CguiTransformation a, CguiTransformation b)
            (a.shrink.x == b.shrink.x && a.shrink.y == b.shrink.y);
 }
 
+void CguiSetTransformation(CguiNode *node, CguiTransformation t)
+{
+    if (!node)
+    {
+        return;
+    }
+
+    if (!CguiIsTransformationEqual(node->transformation, t))
+    {
+        node->transformation = t;
+        node->rebound        = true;
+    }
+}
+
 // Misc.
+
+bool CguiIsTreeStructureEqual(CguiNode *a, CguiNode *b)
+{
+    if (!a || !b)
+    {
+        return false;
+    }
+
+    if (a->childrenCount != b->childrenCount)
+    {
+        return false;
+    }
+
+    for (int i = 0; i < a->childrenCount; i++)
+    {
+        if (!CguiIsTreeStructureEqual(a->children[i], b->children[i]))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool CguiIsTreeTypeEqual(CguiNode *a, CguiNode *b)
+{
+    if (!a || !b)
+    {
+        return false;
+    }
+
+    if (a->type != b->type)
+    {
+        return false;
+    }
+
+    if (a->childrenCount != b->childrenCount)
+    {
+        return false;
+    }
+
+    for (int i = 0; i < a->childrenCount; i++)
+    {
+        if (!CguiIsTreeStructureEqual(a->children[i], b->children[i]))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
 
 bool CguiCopyNodeValues(CguiNode *fromNode, CguiNode *toNode)
 {
@@ -806,18 +1383,30 @@ bool CguiCopyNodeValues(CguiNode *fromNode, CguiNode *toNode)
 
     CguiNode copyNode = *fromNode;
 
-    // Exclude name and hierarchy from copy
-    copyNode.name             = toNode->name;
+    // Exclude hierarchy from copy
     copyNode.parent           = toNode->parent;
     copyNode.children         = toNode->children;
     copyNode.childrenCount    = toNode->childrenCount;
     copyNode.childrenCapacity = toNode->childrenCapacity;
 
+    if (fromNode->name)
+    {
+        const char *newName = TextFormat("%s (Copied #%d)", fromNode->name, ++cguiNameCounter);
+        copyNode.name       = CG_MALLOC_NULL(strlen(newName) + 1);
+        if (!copyNode.name)
+        {
+            return false;
+        }
+
+        strcpy(copyNode.name, newName);
+    }
+
     if (fromNode->data && fromNode->dataSize > 0)
     {
-        copyNode.data = CG_MALLOC(fromNode->dataSize);
+        copyNode.data = CG_MALLOC_NULL(fromNode->dataSize);
         if (!copyNode.data)
         {
+            CG_FREE_NULL(copyNode.name);
             return false;
         }
 
@@ -825,13 +1414,153 @@ bool CguiCopyNodeValues(CguiNode *fromNode, CguiNode *toNode)
         copyNode.dataSize = fromNode->dataSize;
     }
 
-    if (toNode->data)
+    CG_FREE_NULL(toNode->data);
+    toNode->dataSize = 0;
+
+    if (fromNode->instanceData && fromNode->instanceDataSize > 0)
     {
-        CG_FREE_NULL(toNode->data);
-        toNode->dataSize = 0;
+        copyNode.instanceData = CG_MALLOC_NULL(fromNode->instanceDataSize);
+        if (!copyNode.instanceData)
+        {
+            CG_FREE_NULL(copyNode.name);
+            CG_FREE_NULL(copyNode.data);
+            return false;
+        }
+
+        memcpy(copyNode.instanceData, fromNode->instanceData, fromNode->instanceDataSize);
+        copyNode.instanceDataSize = fromNode->instanceDataSize;
     }
 
+    CG_FREE_NULL(toNode->instanceData);
+    toNode->instanceDataSize = 0;
+
     *toNode = copyNode;
+
+    return true;
+}
+
+bool CguiCopyNodeValuesNoTi(CguiNode *fromNode, CguiNode *toNode)
+{
+    if (!fromNode || !toNode)
+    {
+        return false;
+    }
+
+    CguiNode copyNode = *fromNode;
+
+    // Exclude hierarchy and instance data from copy
+    copyNode.parent            = toNode->parent;
+    copyNode.children          = toNode->children;
+    copyNode.childrenCount     = toNode->childrenCount;
+    copyNode.childrenCapacity  = toNode->childrenCapacity;
+    copyNode.templateSource    = toNode->templateSource;
+    copyNode.instances         = toNode->instances;
+    copyNode.instancesCount    = toNode->instancesCount;
+    copyNode.instancesCapacity = toNode->instancesCapacity;
+    copyNode.resync            = toNode->resync;
+    copyNode.instanceData      = toNode->instanceData;
+    copyNode.instanceDataSize  = toNode->instanceDataSize;
+    copyNode.override          = toNode->override;
+
+    if (fromNode->name)
+    {
+        const char *newName = TextFormat("%s (Copied #%d)", fromNode->name, ++cguiNameCounter);
+        copyNode.name       = CG_MALLOC_NULL(strlen(newName) + 1);
+        if (!copyNode.name)
+        {
+            return false;
+        }
+
+        strcpy(copyNode.name, newName);
+    }
+
+    if (fromNode->data && fromNode->dataSize > 0)
+    {
+        copyNode.data = CG_MALLOC_NULL(fromNode->dataSize);
+        if (!copyNode.data)
+        {
+            CG_FREE_NULL(copyNode.name);
+            return false;
+        }
+
+        memcpy(copyNode.data, fromNode->data, fromNode->dataSize);
+        copyNode.dataSize = fromNode->dataSize;
+    }
+
+    CG_FREE_NULL(toNode->data);
+    toNode->dataSize = 0;
+
+    *toNode = copyNode;
+
+    return true;
+}
+
+static void CguiCopyNodeRecurse(CguiNode *fromNode, CguiNode *toNode)
+{
+    if (!fromNode || !toNode)
+    {
+        return;
+    }
+
+    if (!CguiCopyNodeValues(fromNode, toNode))
+    {
+        return;
+    }
+
+    for (int i = 0; i < fromNode->childrenCount; i++)
+    {
+        CguiCopyNodeRecurse(fromNode->children[i], toNode->children[i]);
+    }
+}
+
+bool CguiCopyNode(CguiNode *fromNode, CguiNode *toNode)
+{
+    if (!fromNode || !toNode)
+    {
+        return false;
+    }
+
+    if (!CguiIsTreeStructureEqual(fromNode, toNode))
+    {
+        return false;
+    }
+
+    CguiCopyNodeRecurse(fromNode, toNode);
+
+    return true;
+}
+
+static void CguiCopyNodeNoTiRecurse(CguiNode *fromNode, CguiNode *toNode)
+{
+    if (!fromNode || !toNode)
+    {
+        return;
+    }
+
+    if (!CguiCopyNodeValuesNoTi(fromNode, toNode))
+    {
+        return;
+    }
+
+    for (int i = 0; i < fromNode->childrenCount; i++)
+    {
+        CguiCopyNodeNoTiRecurse(fromNode->children[i], toNode->children[i]);
+    }
+}
+
+bool CguiCopyNodeNoTi(CguiNode *fromNode, CguiNode *toNode)
+{
+    if (!fromNode || !toNode)
+    {
+        return false;
+    }
+
+    if (!CguiIsTreeStructureEqual(fromNode, toNode))
+    {
+        return false;
+    }
+
+    CguiCopyNodeNoTiRecurse(fromNode, toNode);
 
     return true;
 }
@@ -953,7 +1682,8 @@ CguiNode *CguiCheckCollision(CguiNode *node, Vector2 point)
     }
 
     // Check the deepest collision first
-    for (int i = 0; i < node->childrenCount; i++)
+    // Reverse iteration to check overlaps first (top-drawn is later children)
+    for (int i = node->childrenCount - 1; i >= 0; i--)
     {
         CguiNode *collided = CguiCheckCollision(node->children[i], point);
         if (collided)
@@ -968,19 +1698,4 @@ CguiNode *CguiCheckCollision(CguiNode *node, Vector2 point)
     }
 
     return NULL;
-}
-
-void CguiRequestFocus(CguiNode *node)
-{
-    cguiFocusedNode = node;
-}
-
-void CguiRequestUnfocus(void)
-{
-    cguiFocusedNode = NULL;
-}
-
-CguiNode *CguiGetFocusedNode(void)
-{
-    return cguiFocusedNode;
 }

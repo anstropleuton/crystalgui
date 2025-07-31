@@ -1,5 +1,5 @@
 CompileFlags:
-  Add: [-std=c++23, -Iinclude]
+  Add: [-std=c99, -Iinclude, -Wall, -Wextra]
 Diagnostics:
   UnusedIncludes: Strict
   MissingIncludes: Strict

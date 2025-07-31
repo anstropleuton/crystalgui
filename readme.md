@@ -1,11 +1,20 @@
-# 
-[![Uses C++23](https://img.shields.io/badge/C++-23-blue.svg)](https://en.cppreference.com/w/cpp)
+# Crystal GUI
+[![Uses C99](https://img.shields.io/badge/C-99-blue.svg)](https://en.cppreference.com/w/c/compiler_support/99)
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](license.md)
 [![Latest Version v](https://img.shields.io/badge/Latest-v-yellow.svg)](https://github.com/anstropleuton/crystalgui/releases/latest)
 
+[![Control Test Suite](demos/control_test_suite.mp4)](examples/control_test_suite.c)
+
+**Crystal GUI** is a retained-mode GUI framework written in C and built on top of [raylib](https://raylib.com). It can be used to create **visually polished** and **modern-style** GUI desktop applications.
+
+## Components
+
+- **Button**:
+  [![Button]]
+
 # Prerequisite
 
-- A C++ compiler that supports [C++23](https://en.cppreference.com/w/cpp/compiler_support/23)
+- A C compiler that supports [C99](https://en.cppreference.com/w/c/compiler_support/99)
 - CMake 3.15 or higher
 - [doctest](https://github.com/doctest/doctest) (for testing)
 
@@ -39,7 +48,7 @@ add_subdirectory(crystalgui)
 
 If your project does not use CMake for your project, you can use CMake to build Fluxins as a static library, set up include paths, and link the library to your project.
 
-```cpp
+```c
 
 
 #include "crystalgui/crystalgui.hpp"

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 
 project(CrystalGUI
-    DESCRIPTION "Crystal GUI is a modern GUI framework for raylib."
+    DESCRIPTION "Crystal GUI is a GUI framework for raylib."
     VERSION 0.0.1
     LANGUAGES C)
 

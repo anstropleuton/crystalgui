@@ -1,0 +1,257 @@
+INFO: Initializing raylib 5.6-dev
+INFO: Platform backend: DESKTOP (GLFW)
+INFO: Supported raylib modules:
+INFO:     > rcore:..... loaded (mandatory)
+INFO:     > rlgl:...... loaded (mandatory)
+INFO:     > rshapes:... loaded (optional)
+INFO:     > rtextures:. loaded (optional)
+INFO:     > rtext:..... loaded (optional)
+INFO:     > rmodels:... loaded (optional)
+INFO:     > raudio:.... loaded (optional)
+INFO: DISPLAY: Trying to enable MSAA x4
+INFO: DISPLAY: Device initialized successfully
+INFO:     > Display size: 1920 x 1080
+INFO:     > Screen size:  1600 x 800
+INFO:     > Render size:  1600 x 800
+INFO:     > Viewport offsets: 0, 0
+INFO: GLAD: OpenGL extensions loaded successfully
+INFO: GL: Supported extensions count: 232
+INFO: GL: OpenGL device information:
+INFO:     > Vendor:   Intel
+INFO:     > Renderer: Mesa Intel(R) Iris(R) Xe Graphics (TGL GT2)
+INFO:     > Version:  4.6 (Core Profile) Mesa 25.0.7-0ubuntu0.25.04.1
+INFO:     > GLSL:     4.60
+INFO: GL: VAO extension detected, VAO functions loaded successfully
+INFO: GL: NPOT textures extension detected, full NPOT textures supported
+INFO: GL: DXT compressed textures supported
+INFO: GL: ETC2/EAC compressed textures supported
+INFO: PLATFORM: DESKTOP (GLFW - X11): Initialized successfully
+INFO: TEXTURE: [ID 1] Texture loaded successfully (1x1 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 1] Default texture loaded successfully
+INFO: SHADER: [ID 1] Vertex shader compiled successfully
+INFO: SHADER: [ID 2] Fragment shader compiled successfully
+INFO: SHADER: [ID 3] Program shader loaded successfully
+INFO: SHADER: [ID 3] Default shader loaded successfully
+INFO: RLGL: Render batch vertex buffers loaded successfully in RAM (CPU)
+INFO: RLGL: Render batch vertex buffers loaded successfully in VRAM (GPU)
+INFO: RLGL: Default OpenGL state initialized successfully
+INFO: TEXTURE: [ID 2] Texture loaded successfully (128x128 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Default font loaded successfully (224 glyphs)
+INFO: SYSTEM: Working Directory: /media/me/storage/projects/crystalgui
+INFO: FILEIO: [resource/shaders/glsl330/box.fs] Text file loaded successfully
+INFO: SHADER: [ID 4] Fragment shader compiled successfully
+INFO: SHADER: [ID 5] Program shader loaded successfully
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_18pt-Regular.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 3] Texture loaded successfully (256x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (18 pixel size | 95 glyphs)
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_18pt-Italic.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 4] Texture loaded successfully (256x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (18 pixel size | 95 glyphs)
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_24pt-SemiBold.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 5] Texture loaded successfully (512x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (24 pixel size | 95 glyphs)
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_24pt-SemiBoldItalic.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 6] Texture loaded successfully (512x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (24 pixel size | 95 glyphs)
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_18pt-Light.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 7] Texture loaded successfully (256x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (14 pixel size | 95 glyphs)
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_18pt-LightItalic.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 8] Texture loaded successfully (256x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (14 pixel size | 95 glyphs)
+TRACE: Crystal GUI: Created node: CguiRoot #1
+TRACE: Crystal GUI: Created node: CguiLabel #2
+TRACE: Crystal GUI: Created node: CguiTextElement #3
+TRACE: Crystal GUI: Created node: CguiRoot #1 (Clone #5)
+TRACE: Crystal GUI: Created node: CguiLabel #2 (Clone #9)
+TRACE: Crystal GUI: Created node: CguiTextElement #3 (Clone #11)
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_18pt-Regular.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 9] Texture loaded successfully (256x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (18 pixel size | 95 glyphs)
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_18pt-Italic.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 10] Texture loaded successfully (256x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (18 pixel size | 95 glyphs)
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_24pt-SemiBold.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 11] Texture loaded successfully (512x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (24 pixel size | 95 glyphs)
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_24pt-SemiBoldItalic.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 12] Texture loaded successfully (512x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (24 pixel size | 95 glyphs)
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_18pt-Light.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 13] Texture loaded successfully (256x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (14 pixel size | 95 glyphs)
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_18pt-LightItalic.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 14] Texture loaded successfully (256x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (14 pixel size | 95 glyphs)
+TRACE: Crystal GUI: Created node: CguiRoot #15
+TRACE: Crystal GUI: Created node: CguiLabel #16
+TRACE: Crystal GUI: Created node: CguiTextElement #17
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_18pt-Regular.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 15] Texture loaded successfully (256x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (18 pixel size | 95 glyphs)
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_18pt-Italic.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 16] Texture loaded successfully (256x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (18 pixel size | 95 glyphs)
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_24pt-SemiBold.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 17] Texture loaded successfully (512x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (24 pixel size | 95 glyphs)
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_24pt-SemiBoldItalic.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 18] Texture loaded successfully (512x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (24 pixel size | 95 glyphs)
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_18pt-Light.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 19] Texture loaded successfully (256x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (14 pixel size | 95 glyphs)
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_18pt-LightItalic.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 20] Texture loaded successfully (256x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (14 pixel size | 95 glyphs)
+TRACE: Crystal GUI: Created node: CguiRoot #18
+TRACE: Crystal GUI: Created node: CguiLabel #19
+TRACE: Crystal GUI: Created node: CguiTextElement #20
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_18pt-Regular.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 21] Texture loaded successfully (256x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (18 pixel size | 95 glyphs)
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_18pt-Italic.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 22] Texture loaded successfully (256x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (18 pixel size | 95 glyphs)
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_24pt-SemiBold.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 23] Texture loaded successfully (512x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (24 pixel size | 95 glyphs)
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_24pt-SemiBoldItalic.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 24] Texture loaded successfully (512x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (24 pixel size | 95 glyphs)
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_18pt-Light.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 25] Texture loaded successfully (256x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (14 pixel size | 95 glyphs)
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_18pt-LightItalic.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 26] Texture loaded successfully (256x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (14 pixel size | 95 glyphs)
+TRACE: Crystal GUI: Created node: CguiRoot #21
+TRACE: Crystal GUI: Created node: CguiLabel #22
+TRACE: Crystal GUI: Created node: CguiTextElement #23
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_18pt-Regular.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 27] Texture loaded successfully (256x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (18 pixel size | 95 glyphs)
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_18pt-Italic.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 28] Texture loaded successfully (256x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (18 pixel size | 95 glyphs)
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_24pt-SemiBold.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 29] Texture loaded successfully (512x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (24 pixel size | 95 glyphs)
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_24pt-SemiBoldItalic.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 30] Texture loaded successfully (512x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (24 pixel size | 95 glyphs)
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_18pt-Light.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 31] Texture loaded successfully (256x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (14 pixel size | 95 glyphs)
+INFO: FILEIO: [resource/fonts/Inter/static/Inter_18pt-LightItalic.ttf] File loaded successfully
+WARNING: FONT: Character [0x0000007c] size is bigger than expected font size
+INFO: TEXTURE: [ID 32] Texture loaded successfully (256x256 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Data loaded successfully (14 pixel size | 95 glyphs)
+TRACE: Crystal GUI: Created node: CguiRoot #24
+TRACE: Crystal GUI: Created node: CguiLabel #25
+TRACE: Crystal GUI: Created node: CguiTextElement #26
+TRACE: Crystal GUI: Created node: CguiRoot #15 (Copied #28) (Instance #32)
+TRACE: Crystal GUI: Created node: CguiLabel #16 (Copied #30) (Instance #34)
+TRACE: Crystal GUI: Created node: CguiTextElement #17 (Copied #31) (Instance #36)
+TRACE: Crystal GUI: Created node: CguiLabel #16 (Copied #30) (Instance #38)
+TRACE: Crystal GUI: Created node: CguiTextElement #17 (Copied #31) (Instance #40)
+TRACE: Crystal GUI: Created node: CguiLabel #16 (Copied #30) (Instance #42)
+TRACE: Crystal GUI: Created node: CguiTextElement #17 (Copied #31) (Instance #44)
+TRACE: Crystal GUI: Created node: CguiLabel #16 (Copied #30) (Instance #46)
+TRACE: Crystal GUI: Created node: CguiTextElement #17 (Copied #31) (Instance #48)
+TRACE: Crystal GUI: Created node: CguiLabel #16 (Copied #30) (Instance #50)
+TRACE: Crystal GUI: Created node: CguiTextElement #17 (Copied #31) (Instance #52)
+TRACE: Crystal GUI: Created node: CguiLabel #16 (Copied #30) (Instance #54)
+TRACE: Crystal GUI: Created node: CguiTextElement #17 (Copied #31) (Instance #56)
+TRACE: Crystal GUI: Deleted node: CguiTextElement #17 (Copied #129) (Copied #142)
+TRACE: Crystal GUI: Deleted node: CguiLabel #16 (Copied #128) (Copied #136)
+TRACE: Crystal GUI: Deleted node: CguiTextElement #17 (Copied #129) (Copied #141)
+TRACE: Crystal GUI: Deleted node: CguiLabel #16 (Copied #128) (Copied #135)
+TRACE: Crystal GUI: Deleted node: CguiTextElement #17 (Copied #129) (Copied #140)
+TRACE: Crystal GUI: Deleted node: CguiLabel #16 (Copied #128) (Copied #134)
+TRACE: Crystal GUI: Deleted node: CguiTextElement #17 (Copied #129) (Copied #139)
+TRACE: Crystal GUI: Deleted node: CguiLabel #16 (Copied #128) (Copied #133)
+TRACE: Crystal GUI: Deleted node: CguiTextElement #17 (Copied #129) (Copied #138)
+TRACE: Crystal GUI: Deleted node: CguiLabel #16 (Copied #128) (Copied #132)
+TRACE: Crystal GUI: Deleted node: CguiTextElement #17 (Copied #129) (Copied #137)
+TRACE: Crystal GUI: Deleted node: CguiLabel #16 (Copied #128) (Copied #131)
+TRACE: Crystal GUI: Deleted node: CguiRoot #15 (Copied #126) (Copied #130)
+INFO: TEXTURE: [ID 9] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 10] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 11] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 12] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 13] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 14] Unloaded texture data from VRAM (GPU)
+TRACE: Crystal GUI: Deleted node: CguiRoot #15
+TRACE: Crystal GUI: Deleted node: CguiTextElement #17
+TRACE: Crystal GUI: Deleted node: CguiLabel #16
+INFO: TEXTURE: [ID 15] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 16] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 17] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 18] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 19] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 20] Unloaded texture data from VRAM (GPU)
+TRACE: Crystal GUI: Deleted node: CguiRoot #18
+TRACE: Crystal GUI: Deleted node: CguiTextElement #20
+TRACE: Crystal GUI: Deleted node: CguiLabel #19
+INFO: TEXTURE: [ID 21] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 22] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 23] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 24] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 25] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 26] Unloaded texture data from VRAM (GPU)
+TRACE: Crystal GUI: Deleted node: CguiRoot #21
+TRACE: Crystal GUI: Deleted node: CguiTextElement #23
+TRACE: Crystal GUI: Deleted node: CguiLabel #22
+INFO: TEXTURE: [ID 27] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 28] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 29] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 30] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 31] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 32] Unloaded texture data from VRAM (GPU)
+TRACE: Crystal GUI: Deleted node: CguiRoot #24
+TRACE: Crystal GUI: Deleted node: CguiTextElement #26
+TRACE: Crystal GUI: Deleted node: CguiLabel #25
+INFO: TEXTURE: [ID 3] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 4] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 5] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 6] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 7] Unloaded texture data from VRAM (GPU)
+INFO: TEXTURE: [ID 8] Unloaded texture data from VRAM (GPU)
+TRACE: Crystal GUI: Deleted node: CguiRoot #1
+TRACE: Crystal GUI: Deleted node: CguiTextElement #3
+TRACE: Crystal GUI: Deleted node: CguiLabel #2
+INFO: SHADER: [ID 5] Unloaded shader program data from VRAM (GPU)
+INFO: TEXTURE: [ID 2] Unloaded texture data from VRAM (GPU)
+INFO: SHADER: [ID 3] Default shader unloaded successfully
+INFO: TEXTURE: [ID 1] Default texture unloaded successfully
+INFO: Window closed successfully
